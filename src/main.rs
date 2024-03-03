@@ -9,9 +9,7 @@ use iced::widget::{
     row, text,
 };
 use iced::window::{self, Level};
-use iced::{
-    alignment, executor, Alignment, Application, Command, Element, Length, Padding, Point, Settings,
-};
+use iced::{alignment, executor, Alignment, Application, Command, Element, Length, Settings};
 
 use theme::{Style, Theme};
 
@@ -34,10 +32,7 @@ impl Application for Switcher {
     type Flags = ();
 
     fn new(_flags: ()) -> (Self, Command<Self::Message>) {
-        (
-            Self { selected_index: 0 },
-            window::maximize(window::Id::MAIN, true),
-        )
+        (Self { selected_index: 0 }, Command::none())
     }
 
     fn title(&self) -> String {
@@ -97,8 +92,8 @@ fn window_settings() -> window::Settings {
     window::Settings {
         decorations: false,
         level: Level::AlwaysOnTop,
-        // position: window::Position::Centered,
-        // resizable: false,
+        position: window::Position::Centered,
+        resizable: false,
         transparent: true,
         ..Default::default()
     }
