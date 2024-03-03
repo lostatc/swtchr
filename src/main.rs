@@ -3,11 +3,7 @@ mod theme;
 use std::env;
 
 use iced::application::StyleSheet;
-use iced::widget::{
-    column, container,
-    image::{self, Image},
-    row, text,
-};
+use iced::widget::{column, container, row, svg::Svg, text};
 use iced::window::{self, Level};
 use iced::{alignment, executor, Alignment, Application, Command, Element, Length, Settings};
 
@@ -55,44 +51,39 @@ impl Application for Switcher {
             container(
                 column![
                     row![
-                        container(
-                            Image::<image::Handle>::new(
-                                "/home/wren/.local/share/icons/hicolor/512x512/apps/brave-kjbdgfilnfhdoflbpgamdcdgpehopbep-Default.png"
-                            )
-                        )
+                        container(Svg::from_path("./assets/firefox.svg"))
+                            .width(90.0)
                             .padding(10)
                             .style(Style::SelectedWindow),
-                        container(
-                            Image::<image::Handle>::new(
-                                "/home/wren/.local/share/icons/hicolor/512x512/apps/brave-hpfldicfbfomlpcikngkocigghgafkph-Default.png"
-                            )
-                        )
+                        container(Svg::from_path("./assets/terminal.svg"))
+                            .width(90.0)
                             .padding(10),
-                        container(
-                            Image::<image::Handle>::new(
-                                "/home/wren/.local/share/icons/hicolor/512x512/apps/brave-jnpecgipniidlgicjocehkhajgdnjekh-Default.png"
-                            )
-                        )
+                        container(Svg::from_path("./assets/vlc.svg"))
+                            .width(90.0)
+                            .padding(10),
+                        container(Svg::from_path("./assets/rhythmbox.svg"))
+                            .width(90.0)
                             .padding(10),
                     ]
-                        .align_items(Alignment::Center)
-                        .height(Length::Fixed(90.0))
-                        .spacing(20),
-                    text("Window title").style(Style::Switcher).horizontal_alignment(alignment::Horizontal::Center)
-                ]
                     .align_items(Alignment::Center)
-                    .spacing(30)
+                    .spacing(10),
+                    text("GitHub - Firefox")
+                        .style(Style::Switcher)
+                        .horizontal_alignment(alignment::Horizontal::Center)
+                ]
+                .align_items(Alignment::Center)
+                .spacing(20),
             )
-                .style(Style::Switcher)
-                .height(Length::Shrink)
-                .width(Length::Shrink)
-                .padding([25, 35])
+            .style(Style::Switcher)
+            .height(Length::Shrink)
+            .width(Length::Shrink)
+            .padding([25, 35]),
         )
-            .height(Length::Fill)
-            .width(Length::Fill)
-            .center_x()
-            .center_y()
-            .into()
+        .height(Length::Fill)
+        .width(Length::Fill)
+        .center_x()
+        .center_y()
+        .into()
     }
 
     fn style(&self) -> <Self::Theme as StyleSheet>::Style {}

@@ -1,4 +1,4 @@
-use iced::widget::{container, text};
+use iced::widget::{container, svg, text};
 use iced::{application, color, Border, Color};
 
 #[derive(Debug, Clone, Default)]
@@ -15,7 +15,7 @@ pub enum Style {
 pub enum MochaColor {
     Text,
     Crust,
-    Surface0,
+    Base,
 }
 
 impl MochaColor {
@@ -25,7 +25,7 @@ impl MochaColor {
         match self {
             Text => color!(0xcdd6f4),
             Crust => color!(0x11111b),
-            Surface0 => color!(0x313244),
+            Base => color!(0x1e1e2e),
         }
     }
 
@@ -64,6 +64,14 @@ impl text::StyleSheet for Theme {
     }
 }
 
+impl svg::StyleSheet for Theme {
+    type Style = Style;
+
+    fn appearance(&self, _style: &Self::Style) -> svg::Appearance {
+        svg::Appearance::default()
+    }
+}
+
 impl container::StyleSheet for Theme {
     type Style = Style;
 
@@ -80,7 +88,7 @@ impl container::StyleSheet for Theme {
                 };
             }
             Style::SelectedWindow => {
-                appearance.background = Some(MochaColor::Surface0.with_alpha(0.8).into());
+                appearance.background = Some(MochaColor::Base.with_alpha(0.9).into());
                 appearance.border = Border {
                     color: Color::TRANSPARENT,
                     width: 0.0,
