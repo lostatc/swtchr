@@ -6,6 +6,7 @@ pub enum Style {
     #[default]
     Default,
     Switcher,
+    SelectedWindow,
 }
 
 // Catppuccin Mocha
@@ -14,6 +15,7 @@ pub enum Style {
 pub enum MochaColor {
     Text,
     Crust,
+    Surface0,
 }
 
 impl MochaColor {
@@ -23,6 +25,7 @@ impl MochaColor {
         match self {
             Text => color!(0xcdd6f4),
             Crust => color!(0x11111b),
+            Surface0 => color!(0x313244),
         }
     }
 
@@ -67,14 +70,26 @@ impl container::StyleSheet for Theme {
     fn appearance(&self, style: &Self::Style) -> container::Appearance {
         let mut appearance = container::Appearance::default();
 
-        if let Style::Switcher = style {
-            appearance.background = Some(MochaColor::Crust.with_alpha(0.8).into());
-            appearance.border = Border {
-                color: Color::TRANSPARENT,
-                width: 0.0,
-                radius: 20.0.into(),
-            };
+        match style {
+            Style::Switcher => {
+                appearance.background = Some(MochaColor::Crust.with_alpha(0.8).into());
+                appearance.border = Border {
+                    color: Color::TRANSPARENT,
+                    width: 0.0,
+                    radius: 20.0.into(),
+                };
+            }
+            Style::SelectedWindow => {
+                appearance.background = Some(MochaColor::Surface0.with_alpha(0.8).into());
+                appearance.border = Border {
+                    color: Color::TRANSPARENT,
+                    width: 0.0,
+                    radius: 8.0.into(),
+                };
+            }
+            _ => {}
         }
+        if let Style::Switcher = style {}
 
         appearance
     }

@@ -55,18 +55,28 @@ impl Application for Switcher {
             container(
                 column![
                     row![
-                        Image::<image::Handle>::new(
-                            "/home/wren/.local/share/icons/hicolor/512x512/apps/brave-kjbdgfilnfhdoflbpgamdcdgpehopbep-Default.png"
-                        ),
-                        Image::<image::Handle>::new(
-                            "/home/wren/.local/share/icons/hicolor/512x512/apps/brave-hpfldicfbfomlpcikngkocigghgafkph-Default.png"
-                        ),
-                        Image::<image::Handle>::new(
-                            "/home/wren/.local/share/icons/hicolor/512x512/apps/brave-jnpecgipniidlgicjocehkhajgdnjekh-Default.png"
+                        container(
+                            Image::<image::Handle>::new(
+                                "/home/wren/.local/share/icons/hicolor/512x512/apps/brave-kjbdgfilnfhdoflbpgamdcdgpehopbep-Default.png"
+                            )
                         )
+                            .padding(10)
+                            .style(Style::SelectedWindow),
+                        container(
+                            Image::<image::Handle>::new(
+                                "/home/wren/.local/share/icons/hicolor/512x512/apps/brave-hpfldicfbfomlpcikngkocigghgafkph-Default.png"
+                            )
+                        )
+                            .padding(10),
+                        container(
+                            Image::<image::Handle>::new(
+                                "/home/wren/.local/share/icons/hicolor/512x512/apps/brave-jnpecgipniidlgicjocehkhajgdnjekh-Default.png"
+                            )
+                        )
+                            .padding(10),
                     ]
                         .align_items(Alignment::Center)
-                        .height(Length::Fixed(80.0))
+                        .height(Length::Fixed(90.0))
                         .spacing(20),
                     text("Window title").style(Style::Switcher).horizontal_alignment(alignment::Horizontal::Center)
                 ]
