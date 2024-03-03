@@ -5,3 +5,7 @@ edition = "2021"
 
 [dependencies]
 iced = "0.12.1"
+
+[lints.rust]
+unsafe_code = "forbid"
+missing_debug_implementations = "warn"
