@@ -14,8 +14,11 @@ pub enum Style {
 #[derive(Debug, Copy, Clone)]
 pub enum MochaColor {
     Text,
-    Crust,
+    Surface2,
+    Surface1,
+    Surface0,
     Base,
+    Crust,
 }
 
 impl MochaColor {
@@ -24,8 +27,11 @@ impl MochaColor {
 
         match self {
             Text => color!(0xcdd6f4),
-            Crust => color!(0x11111b),
+            Surface2 => color!(0x585b70),
+            Surface1 => color!(0x45475a),
+            Surface0 => color!(0x313244),
             Base => color!(0x1e1e2e),
+            Crust => color!(0x11111b),
         }
     }
 
@@ -88,7 +94,7 @@ impl container::StyleSheet for Theme {
                 };
             }
             Style::SelectedWindow => {
-                appearance.background = Some(MochaColor::Base.with_alpha(0.9).into());
+                appearance.background = Some(MochaColor::Text.with_alpha(0.015).into());
                 appearance.border = Border {
                     color: Color::TRANSPARENT,
                     width: 0.0,
