@@ -9,11 +9,11 @@ use iced::widget::{
     row, text,
 };
 use iced::window::{self, Level};
-use iced::{alignment, executor, Alignment, Application, Command, Element, Length, Settings};
+use iced::{
+    alignment, executor, Alignment, Application, Command, Element, Length, Padding, Point, Settings,
+};
 
-use theme::Theme;
-
-const ICON_HEIGHT: f32 = 120.0;
+use theme::{Style, Theme};
 
 #[derive(Debug)]
 struct Switcher {
@@ -34,7 +34,10 @@ impl Application for Switcher {
     type Flags = ();
 
     fn new(_flags: ()) -> (Self, Command<Self::Message>) {
-        (Self { selected_index: 0 }, Command::none())
+        (
+            Self { selected_index: 0 },
+            window::maximize(window::Id::MAIN, true),
+        )
     }
 
     fn title(&self) -> String {
@@ -54,25 +57,31 @@ impl Application for Switcher {
 
     fn view(&self) -> Element<'_, Self::Message, Self::Theme> {
         container(
-            column![
-                row![
-                    Image::<image::Handle>::new(
-                        "/home/wren/.local/share/icons/hicolor/512x512/apps/brave-kjbdgfilnfhdoflbpgamdcdgpehopbep-Default.png"
-                    ),
-                    Image::<image::Handle>::new(
-                        "/home/wren/.local/share/icons/hicolor/512x512/apps/brave-hpfldicfbfomlpcikngkocigghgafkph-Default.png"
-                    ),
-                    Image::<image::Handle>::new(
-                        "/home/wren/.local/share/icons/hicolor/512x512/apps/brave-jnpecgipniidlgicjocehkhajgdnjekh-Default.png"
-                    )
+            container(
+                column![
+                    row![
+                        Image::<image::Handle>::new(
+                            "/home/wren/.local/share/icons/hicolor/512x512/apps/brave-kjbdgfilnfhdoflbpgamdcdgpehopbep-Default.png"
+                        ),
+                        Image::<image::Handle>::new(
+                            "/home/wren/.local/share/icons/hicolor/512x512/apps/brave-hpfldicfbfomlpcikngkocigghgafkph-Default.png"
+                        ),
+                        Image::<image::Handle>::new(
+                            "/home/wren/.local/share/icons/hicolor/512x512/apps/brave-jnpecgipniidlgicjocehkhajgdnjekh-Default.png"
+                        )
+                    ]
+                        .align_items(Alignment::Center)
+                        .height(Length::Fixed(80.0))
+                        .spacing(20),
+                    text("Window title").style(Style::Switcher).horizontal_alignment(alignment::Horizontal::Center)
                 ]
                     .align_items(Alignment::Center)
-                    .height(Length::Fixed(ICON_HEIGHT))
-                    .spacing(10),
-                text("Window title").horizontal_alignment(alignment::Horizontal::Center)
-            ]
-                .align_items(Alignment::Center)
-                .spacing(20)
+                    .spacing(30)
+            )
+                .style(Style::Switcher)
+                .height(Length::Shrink)
+                .width(Length::Shrink)
+                .padding([25, 35])
         )
             .height(Length::Fill)
             .width(Length::Fill)
@@ -88,8 +97,8 @@ fn window_settings() -> window::Settings {
     window::Settings {
         decorations: false,
         level: Level::AlwaysOnTop,
-        position: window::Position::Centered,
-        resizable: false,
+        // position: window::Position::Centered,
+        // resizable: false,
         transparent: true,
         ..Default::default()
     }
