@@ -1,13 +1,17 @@
+mod theme;
+
+use std::env;
+
+use iced::application::StyleSheet;
 use iced::widget::{
     column, container,
     image::{self, Image},
     row, text,
 };
 use iced::window::{self, Level};
-use iced::{
-    alignment, color, executor, theme, Alignment, Application, Command, Element, Length, Settings,
-    Theme,
-};
+use iced::{alignment, executor, Alignment, Application, Command, Element, Length, Settings};
+
+use theme::Theme;
 
 const ICON_HEIGHT: f32 = 120.0;
 
@@ -48,7 +52,7 @@ impl Application for Switcher {
         }
     }
 
-    fn view(&self) -> Element<'_, Self::Message> {
+    fn view(&self) -> Element<'_, Self::Message, Self::Theme> {
         container(
             column![
                 row![
@@ -74,12 +78,10 @@ impl Application for Switcher {
             .width(Length::Fill)
             .center_x()
             .center_y()
-            .style(theme::Container::from(container::Appearance {
-                background: Some(iced::Background::Color(color!(0x0000ff, 0.0))),
-                ..Default::default()
-            }))
             .into()
     }
+
+    fn style(&self) -> <Self::Theme as StyleSheet>::Style {}
 }
 
 fn window_settings() -> window::Settings {
@@ -94,6 +96,11 @@ fn window_settings() -> window::Settings {
 }
 
 fn main() -> iced::Result {
+    // Force the `gl` backend because window transparency doesn't work on the default wgpu backend.
+    //
+    // https://github.com/iced-rs/iced/issues/596
+    env::set_var("WGPU_BACKEND", "gl");
+
     Switcher::run(Settings {
         window: window_settings(),
         ..Default::default()
