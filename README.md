@@ -28,5 +28,6 @@ direnv allow
 If you would prefer to install the necessary dependencies using a different
 package manager:
 
-- [Install GTK4](https://gtk-rs.org/gtk4-rs/stable/latest/book/installation_linux.html)
-- [Install gtk4-layer-shell](https://github.com/wmww/gtk4-layer-shell?tab=readme-ov-file#distro-packages)
+- [GTK 4](https://gtk-rs.org/gtk4-rs/stable/latest/book/installation_linux.html)
+- [gtk4-layer-shell](https://github.com/wmww/gtk4-layer-shell?tab=readme-ov-file#distro-packages)
+- [librsvg](https://gitlab.gnome.org/GNOME/librsvg)

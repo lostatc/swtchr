@@ -8,5 +8,6 @@ pkgs.mkShell {
     gtk4
     gtk4-layer-shell
     pkg-config
+    librsvg
   ];
 }
