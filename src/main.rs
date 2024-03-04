@@ -13,11 +13,17 @@ use config::Config;
 
 const APP_ID: &str = "io.github.lostatc.swtchr";
 
-fn app_icon(icon_name: &str) -> impl IsA<Widget> {
+fn app_icon(icon_name: &str, selected: bool) -> impl IsA<Widget> {
+    let classes: &[&str] = if selected {
+        &["icon", "selected"]
+    } else {
+        &["icon"]
+    };
+
     Image::builder()
         .icon_name(icon_name)
         .pixel_size(80)
-        .css_classes(["icon"])
+        .css_classes(classes)
         .build()
 }
 
@@ -27,12 +33,12 @@ fn app_icon_bar() -> impl IsA<Widget> {
         .spacing(20)
         .halign(Align::Center)
         .valign(Align::Center)
-        .css_classes(["overlay"])
+        .name("overlay")
         .build();
 
-    icon_bar.append(&app_icon("firefox"));
-    icon_bar.append(&app_icon("vlc"));
-    icon_bar.append(&app_icon("rhythmbox"));
+    icon_bar.append(&app_icon("firefox", true));
+    icon_bar.append(&app_icon("vlc", false));
+    icon_bar.append(&app_icon("rhythmbox", false));
 
     icon_bar
 }
