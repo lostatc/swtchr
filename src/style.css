@@ -3,8 +3,8 @@ window {
 }
 
 #overlay {
-  background-color: #11111bcc; /* Catppuccin Mocha Crust */
-  padding: 25px 35px;
+  background-color: #11111bee; /* Catppuccin Mocha Crust */
+  padding: 25px 25px;
   border-radius: 20px;
 }
 
@@ -13,7 +13,7 @@ window {
 }
 
 .app-icon.selected {
-  background-color: #cdd6f418; /* Catppuccin Mocha Text */
+  background-color: #cdd6f414; /* Catppuccin Mocha Text */
   border-radius: 10px;
 }
 

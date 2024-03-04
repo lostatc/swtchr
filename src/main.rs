@@ -47,7 +47,7 @@ fn app_icon_bar() -> impl IsA<Widget> {
 fn overlay() -> impl IsA<Widget> {
     let icon_bar = Box::builder()
         .orientation(Orientation::Vertical)
-        .spacing(20)
+        .spacing(15)
         .halign(Align::Center)
         .valign(Align::Center)
         .name("overlay")
