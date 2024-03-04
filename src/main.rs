@@ -3,7 +3,9 @@ mod config;
 use eyre::bail;
 use gtk::gdk::Display;
 use gtk::gio::ActionEntry;
-use gtk::{glib, Align, Application, ApplicationWindow, Box, Image, Orientation, Settings};
+use gtk::{
+    glib, Align, Application, ApplicationWindow, Box, CssProvider, Image, Orientation, Settings,
+};
 use gtk::{prelude::*, Widget};
 use gtk4_layer_shell::{KeyboardMode, Layer, LayerShell};
 
@@ -12,7 +14,11 @@ use config::Config;
 const APP_ID: &str = "io.github.lostatc.swtchr";
 
 fn app_icon(icon_name: &str) -> impl IsA<Widget> {
-    Image::builder().icon_name(icon_name).pixel_size(80).build()
+    Image::builder()
+        .icon_name(icon_name)
+        .pixel_size(80)
+        .css_classes(["icon"])
+        .build()
 }
 
 fn app_icon_bar() -> impl IsA<Widget> {
@@ -21,6 +27,7 @@ fn app_icon_bar() -> impl IsA<Widget> {
         .spacing(20)
         .halign(Align::Center)
         .valign(Align::Center)
+        .css_classes(["overlay"])
         .build();
 
     icon_bar.append(&app_icon("firefox"));
@@ -31,7 +38,7 @@ fn app_icon_bar() -> impl IsA<Widget> {
 }
 
 fn set_settings(config: &Config) {
-    let display = Display::default().expect("no default display found");
+    let display = Display::default().expect("Could not connect to a display.");
     let settings = Settings::for_display(&display);
     settings.set_gtk_icon_theme_name(config.icon_theme.as_deref());
 }
@@ -63,6 +70,17 @@ fn build_window(config: &Config, app: &Application) {
     window.present();
 }
 
+fn load_css() {
+    let provider = CssProvider::new();
+    provider.load_from_string(include_str!("style.css"));
+
+    gtk::style_context_add_provider_for_display(
+        &Display::default().expect("Could not connect to a display."),
+        &provider,
+        gtk::STYLE_PROVIDER_PRIORITY_APPLICATION,
+    );
+}
+
 fn main() -> eyre::Result<()> {
     let config = Config::read()?;
 
@@ -71,6 +89,7 @@ fn main() -> eyre::Result<()> {
     // Close window on keypress.
     app.set_accels_for_action("win.close", &[&config.keymap.dismiss]);
 
+    app.connect_startup(|_| load_css());
     app.connect_activate(move |app| build_window(&config, app));
 
     let exit_code = app.run();
