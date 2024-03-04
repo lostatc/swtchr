@@ -1,4 +1,4 @@
-# sway-switcher
+# swtchr
 
-A Gnome-style, [swayr](https://git.sr.ht/~tsdh/swayr)-compatible window
-switcher for [Sway](https://swaywm.org/).
+A Gnome-style window switcher for the [Sway](https://swaywm.org/) window
+manager.
