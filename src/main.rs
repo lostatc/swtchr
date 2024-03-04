@@ -5,12 +5,12 @@ use gtk4_layer_shell::{KeyboardMode, Layer, LayerShell};
 
 const APP_ID: &str = "io.github.lostatc.swtchr";
 
-fn app_icon() -> impl IsA<Widget> {
-    Image::from_file("/home/wren/Programs/Wren/swtchr/assets/firefox.svg")
+fn app_icon(icon_name: &str) -> impl IsA<Widget> {
+    Image::builder().icon_name(icon_name).pixel_size(80).build()
 }
 
 fn app_icon_bar() -> impl IsA<Widget> {
-    app_icon()
+    app_icon("firefox")
 }
 
 fn build_window(app: &Application) {
