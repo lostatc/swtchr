@@ -1,9 +1,13 @@
-use gtk::builders::IconThemeBuilder;
+mod config;
+
+use eyre::bail;
 use gtk::gdk::Display;
 use gtk::gio::ActionEntry;
-use gtk::{glib, Align, Application, ApplicationWindow, Box, IconTheme, Image, Orientation};
+use gtk::{glib, Align, Application, ApplicationWindow, Box, Image, Orientation, Settings};
 use gtk::{prelude::*, Widget};
 use gtk4_layer_shell::{KeyboardMode, Layer, LayerShell};
+
+use config::Config;
 
 const APP_ID: &str = "io.github.lostatc.swtchr";
 
@@ -12,9 +16,6 @@ fn app_icon(icon_name: &str) -> impl IsA<Widget> {
 }
 
 fn app_icon_bar() -> impl IsA<Widget> {
-    let display = Display::default().unwrap();
-    println!("{}", IconTheme::for_display(&display).theme_name());
-
     let icon_bar = Box::builder()
         .orientation(Orientation::Horizontal)
         .spacing(20)
@@ -29,11 +30,19 @@ fn app_icon_bar() -> impl IsA<Widget> {
     icon_bar
 }
 
-fn build_window(app: &Application) {
+fn set_settings(config: &Config) {
+    let display = Display::default().expect("no default display found");
+    let settings = Settings::for_display(&display);
+    settings.set_gtk_icon_theme_name(config.icon_theme.as_deref());
+}
+
+fn build_window(config: &Config, app: &Application) {
     let window = ApplicationWindow::builder()
         .application(app)
         .title("swtchr window switcher")
         .build();
+
+    set_settings(config);
 
     // Set this window up as an overlay that captures all keyboard events via the Wayland Layer
     // Shell protocol.
@@ -54,13 +63,21 @@ fn build_window(app: &Application) {
     window.present();
 }
 
-fn main() -> glib::ExitCode {
+fn main() -> eyre::Result<()> {
+    let config = Config::read()?;
+
     let app = Application::builder().application_id(APP_ID).build();
 
-    app.connect_activate(build_window);
-
     // Close window with Esc key.
-    app.set_accels_for_action("win.close", &["Escape"]);
+    app.set_accels_for_action("win.close", &[&config.keymap.dismiss]);
 
-    app.run()
+    app.connect_activate(move |app| build_window(&config, app));
+
+    let exit_code = app.run();
+
+    if exit_code != glib::ExitCode::SUCCESS {
+        bail!("GTK app returned non-zero exit code")
+    }
+
+    Ok(())
 }

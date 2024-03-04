@@ -4,8 +4,11 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
+color-eyre = "0.6.2"
+eyre = "0.6.12"
 gtk = { version = "0.7.3", package = "gtk4", features = ["v4_12"] }
 gtk4-layer-shell = "0.2.0"
+serde = { version = "1.0.197", features = ["derive"] }
 
 [lints.rust]
 unsafe_code = "forbid"
