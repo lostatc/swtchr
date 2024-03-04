@@ -1,5 +1,7 @@
+use gtk::builders::IconThemeBuilder;
+use gtk::gdk::Display;
 use gtk::gio::ActionEntry;
-use gtk::{glib, Align, Application, ApplicationWindow, Box, Image, Orientation};
+use gtk::{glib, Align, Application, ApplicationWindow, Box, IconTheme, Image, Orientation};
 use gtk::{prelude::*, Widget};
 use gtk4_layer_shell::{KeyboardMode, Layer, LayerShell};
 
@@ -10,6 +12,9 @@ fn app_icon(icon_name: &str) -> impl IsA<Widget> {
 }
 
 fn app_icon_bar() -> impl IsA<Widget> {
+    let display = Display::default().unwrap();
+    println!("{}", IconTheme::for_display(&display).theme_name());
+
     let icon_bar = Box::builder()
         .orientation(Orientation::Horizontal)
         .spacing(20)
