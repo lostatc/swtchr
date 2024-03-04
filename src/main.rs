@@ -4,7 +4,8 @@ use eyre::bail;
 use gtk::gdk::Display;
 use gtk::gio::ActionEntry;
 use gtk::{
-    glib, Align, Application, ApplicationWindow, Box, CssProvider, Image, Orientation, Settings,
+    glib, Align, Application, ApplicationWindow, Box, CssProvider, Image, Label, Orientation,
+    Settings,
 };
 use gtk::{prelude::*, Widget};
 use gtk4_layer_shell::{KeyboardMode, Layer, LayerShell};
@@ -15,9 +16,9 @@ const APP_ID: &str = "io.github.lostatc.swtchr";
 
 fn app_icon(icon_name: &str, selected: bool) -> impl IsA<Widget> {
     let classes: &[&str] = if selected {
-        &["icon", "selected"]
+        &["app-icon", "selected"]
     } else {
-        &["icon"]
+        &["app-icon"]
     };
 
     Image::builder()
@@ -30,15 +31,36 @@ fn app_icon(icon_name: &str, selected: bool) -> impl IsA<Widget> {
 fn app_icon_bar() -> impl IsA<Widget> {
     let icon_bar = Box::builder()
         .orientation(Orientation::Horizontal)
+        .spacing(15)
+        .halign(Align::Center)
+        .valign(Align::Center)
+        .build();
+
+    icon_bar.append(&app_icon("org.wezfurlong.wezterm", true));
+    icon_bar.append(&app_icon("firefox", false));
+    icon_bar.append(&app_icon("vlc", false));
+    icon_bar.append(&app_icon("rhythmbox", false));
+
+    icon_bar
+}
+
+fn overlay() -> impl IsA<Widget> {
+    let icon_bar = Box::builder()
+        .orientation(Orientation::Vertical)
         .spacing(20)
         .halign(Align::Center)
         .valign(Align::Center)
         .name("overlay")
         .build();
 
-    icon_bar.append(&app_icon("firefox", true));
-    icon_bar.append(&app_icon("vlc", false));
-    icon_bar.append(&app_icon("rhythmbox", false));
+    let window_label = Label::builder()
+        .label("WezTerm - neovim")
+        .justify(gtk::Justification::Center)
+        .name("window-title")
+        .build();
+
+    icon_bar.append(&app_icon_bar());
+    icon_bar.append(&window_label);
 
     icon_bar
 }
@@ -46,7 +68,9 @@ fn app_icon_bar() -> impl IsA<Widget> {
 fn set_settings(config: &Config) {
     let display = Display::default().expect("Could not connect to a display.");
     let settings = Settings::for_display(&display);
+
     settings.set_gtk_icon_theme_name(config.icon_theme.as_deref());
+    settings.set_gtk_font_name(config.font.as_deref());
 }
 
 fn build_window(config: &Config, app: &Application) {
@@ -71,7 +95,7 @@ fn build_window(config: &Config, app: &Application) {
         .build();
     window.add_action_entries([action_close]);
 
-    window.set_child(Some(&app_icon_bar()));
+    window.set_child(Some(&overlay()));
 
     window.present();
 }

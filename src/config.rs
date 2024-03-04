@@ -24,7 +24,7 @@ impl Config {
         // TODO: Parse an actual TOML file to get this config.
         Ok(Config {
             icon_theme: Some(String::from("Papirus-Dark")),
-            font: Some(String::from("Fira Sans 12")),
+            font: Some(String::from("Fira Sans 13")),
             keymap: KeymapConfig {
                 dismiss: defaults::dismiss_key(),
                 select: defaults::select_key(),

@@ -8,11 +8,15 @@ window {
   border-radius: 20px;
 }
 
-.icon {
+.app-icon {
   padding: 10px;
 }
 
-.icon.selected {
+.app-icon.selected {
   background-color: #cdd6f418; /* Catppuccin Mocha Text */
-  border-radius: 8px;
+  border-radius: 10px;
+}
+
+#window-title {
+  color: #cdd6f4; /* Catppuccin Mocha Text */
 }
