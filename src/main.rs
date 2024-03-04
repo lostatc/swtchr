@@ -1,5 +1,5 @@
 use gtk::gio::ActionEntry;
-use gtk::{glib, Application, ApplicationWindow, Image};
+use gtk::{glib, Align, Application, ApplicationWindow, Box, Image, Orientation};
 use gtk::{prelude::*, Widget};
 use gtk4_layer_shell::{KeyboardMode, Layer, LayerShell};
 
@@ -10,7 +10,18 @@ fn app_icon(icon_name: &str) -> impl IsA<Widget> {
 }
 
 fn app_icon_bar() -> impl IsA<Widget> {
-    app_icon("firefox")
+    let icon_bar = Box::builder()
+        .orientation(Orientation::Horizontal)
+        .spacing(20)
+        .halign(Align::Center)
+        .valign(Align::Center)
+        .build();
+
+    icon_bar.append(&app_icon("firefox"));
+    icon_bar.append(&app_icon("vlc"));
+    icon_bar.append(&app_icon("rhythmbox"));
+
+    icon_bar
 }
 
 fn build_window(app: &Application) {
