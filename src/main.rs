@@ -39,7 +39,7 @@ fn set_settings(config: &Config) {
 fn build_window(config: &Config, app: &Application) {
     let window = ApplicationWindow::builder()
         .application(app)
-        .title("swtchr window switcher")
+        .title("swtchr")
         .build();
 
     set_settings(config);
@@ -50,7 +50,7 @@ fn build_window(config: &Config, app: &Application) {
     window.set_layer(Layer::Overlay);
     window.set_keyboard_mode(KeyboardMode::Exclusive);
 
-    // Close window with Esc key.
+    // Close window on keypress.
     let action_close = ActionEntry::builder("close")
         .activate(|window: &ApplicationWindow, _, _| {
             window.close();
@@ -68,7 +68,7 @@ fn main() -> eyre::Result<()> {
 
     let app = Application::builder().application_id(APP_ID).build();
 
-    // Close window with Esc key.
+    // Close window on keypress.
     app.set_accels_for_action("win.close", &[&config.keymap.dismiss]);
 
     app.connect_activate(move |app| build_window(&config, app));
