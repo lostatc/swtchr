@@ -1,13 +1,13 @@
+mod components;
 mod config;
 
+use components::overlay;
 use eyre::bail;
-use glib::clone;
 use gtk::gdk::Display;
 use gtk::gio::{self, ActionEntry};
-use gtk::{glib, prelude::*, Widget};
-use gtk::{
-    Align, Application, ApplicationWindow, Box, CssProvider, Image, Label, Orientation, Settings,
-};
+use gtk::glib::{self, clone};
+use gtk::prelude::*;
+use gtk::{Application, ApplicationWindow, CssProvider, Settings};
 use gtk4_layer_shell::{KeyboardMode, Layer, LayerShell};
 use signal_hook::consts::signal::SIGUSR1;
 use signal_hook::iterator::Signals;
@@ -15,57 +15,7 @@ use signal_hook::iterator::Signals;
 use config::Config;
 
 const APP_ID: &str = "io.github.lostatc.swtchr";
-
-fn app_icon(icon_name: &str, selected: bool) -> impl IsA<Widget> {
-    let classes: &[&str] = if selected {
-        &["app-icon", "selected"]
-    } else {
-        &["app-icon"]
-    };
-
-    Image::builder()
-        .icon_name(icon_name)
-        .pixel_size(80)
-        .css_classes(classes)
-        .build()
-}
-
-fn app_icon_bar() -> impl IsA<Widget> {
-    let icon_bar = Box::builder()
-        .orientation(Orientation::Horizontal)
-        .spacing(15)
-        .halign(Align::Center)
-        .valign(Align::Center)
-        .build();
-
-    icon_bar.append(&app_icon("org.wezfurlong.wezterm", true));
-    icon_bar.append(&app_icon("firefox", false));
-    icon_bar.append(&app_icon("vlc", false));
-    icon_bar.append(&app_icon("rhythmbox", false));
-
-    icon_bar
-}
-
-fn overlay() -> impl IsA<Widget> {
-    let icon_bar = Box::builder()
-        .orientation(Orientation::Vertical)
-        .spacing(15)
-        .halign(Align::Center)
-        .valign(Align::Center)
-        .name("overlay")
-        .build();
-
-    let window_label = Label::builder()
-        .label("WezTerm - neovim")
-        .justify(gtk::Justification::Center)
-        .name("window-title")
-        .build();
-
-    icon_bar.append(&app_icon_bar());
-    icon_bar.append(&window_label);
-
-    icon_bar
-}
+const WINDOW_TITLE: &str = "swtchr";
 
 fn set_settings(config: &Config) {
     let display = Display::default().expect("Could not connect to a display.");
@@ -94,10 +44,30 @@ fn wait_for_display_signal(window: &ApplicationWindow) {
     }));
 }
 
+fn register_actions(window: &ApplicationWindow) {
+    // Make the window visible and capture keyboard events.
+    let action_display = ActionEntry::builder("display")
+        .activate(|window: &ApplicationWindow, _, _| {
+            window.set_keyboard_mode(KeyboardMode::Exclusive);
+            window.set_visible(true);
+        })
+        .build();
+
+    // Hide the window and release control of the keyboard.
+    let action_hide = ActionEntry::builder("hide")
+        .activate(|window: &ApplicationWindow, _, _| {
+            window.set_keyboard_mode(KeyboardMode::None);
+            window.set_visible(false);
+        })
+        .build();
+
+    window.add_action_entries([action_display, action_hide]);
+}
+
 fn build_window(config: &Config, app: &Application) {
     let window = ApplicationWindow::builder()
         .application(app)
-        .title("swtchr")
+        .title(WINDOW_TITLE)
         .build();
 
     set_settings(config);
@@ -107,30 +77,13 @@ fn build_window(config: &Config, app: &Application) {
     window.set_layer(Layer::Overlay);
     window.set_keyboard_mode(KeyboardMode::None);
 
-    // Register action to hide the window and release control of the keyboard.
-    let action_hide = ActionEntry::builder("hide")
-        .activate(|window: &ApplicationWindow, _, _| {
-            window.set_keyboard_mode(KeyboardMode::None);
-            window.set_visible(false);
-        })
-        .build();
+    register_actions(&window);
 
-    // Register action to make the window visible and capture keyboard events.
-    let action_display = ActionEntry::builder("display")
-        .activate(|window: &ApplicationWindow, _, _| {
-            window.set_keyboard_mode(KeyboardMode::Exclusive);
-            window.set_visible(true);
-        })
-        .build();
-
-    window.add_action_entries([action_hide, action_display]);
-
-    window.set_child(Some(&overlay()));
-
-    // Wait for the signal to display itself.
+    // Wait for the signal to display (un-hide) the overlay.
     wait_for_display_signal(&window);
 
     // The window is initially hidden until it receives the signal to display itself.
+    window.set_child(Some(&overlay()));
     window.present();
     window.set_visible(false);
 }
@@ -146,22 +99,25 @@ fn load_css() {
     );
 }
 
+fn register_keybinds(config: &Config, app: &Application) {
+    // Hide the overlay.
+    app.set_accels_for_action("win.hide", &[&config.keymap.dismiss]);
+}
+
 fn main() -> eyre::Result<()> {
     let config = Config::read()?;
 
     let app = Application::builder().application_id(APP_ID).build();
 
-    // Hide window on keypress.
-    app.set_accels_for_action("win.hide", &[&config.keymap.dismiss]);
+    register_keybinds(&config, &app);
 
     app.connect_startup(|_| load_css());
-
     app.connect_activate(move |app| build_window(&config, app));
 
     let exit_code = app.run();
 
     if exit_code != glib::ExitCode::SUCCESS {
-        bail!("GTK app returned non-zero exit code")
+        bail!("GTK overlay returned a non-zero exit code.")
     }
 
     Ok(())
