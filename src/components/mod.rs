@@ -1,27 +1,12 @@
 mod app_bar;
-mod app_icon;
+mod app_button;
 mod overlay;
 
 use gtk::prelude::*;
 use gtk::{Align, Box as GtkBox, Label, Orientation, Widget};
 
-use app_icon::AppButton;
-
-fn app_icon_bar() -> impl IsA<Widget> {
-    let icon_bar = GtkBox::builder()
-        .orientation(Orientation::Horizontal)
-        .spacing(15)
-        .halign(Align::Center)
-        .valign(Align::Center)
-        .build();
-
-    icon_bar.append(&AppButton::new(String::from("org.wezfurlong.wezterm")));
-    icon_bar.append(&AppButton::new(String::from("firefox")));
-    icon_bar.append(&AppButton::new(String::from("vlc")));
-    icon_bar.append(&AppButton::new(String::from("rhythmbox")));
-
-    icon_bar
-}
+use app_bar::AppBar;
+use app_button::AppButton;
 
 pub fn overlay() -> impl IsA<Widget> {
     let icon_bar = GtkBox::builder()
@@ -38,7 +23,13 @@ pub fn overlay() -> impl IsA<Widget> {
         .name("window-title")
         .build();
 
-    icon_bar.append(&app_icon_bar());
+    icon_bar.append(&AppBar::new(&[
+        AppButton::new(String::from("org.wezfurlong.wezterm")),
+        AppButton::new(String::from("firefox")),
+        AppButton::new(String::from("vlc")),
+        AppButton::new(String::from("rhythmbox")),
+    ]));
+
     icon_bar.append(&window_label);
 
     icon_bar
