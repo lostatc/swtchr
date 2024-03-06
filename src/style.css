@@ -10,11 +10,15 @@ window {
 
 .app-icon {
   padding: 10px;
+  min-width: 80px;
+  background: transparent;
+  border-radius: 10px;
+  border: none;
 }
 
-.app-icon.selected {
+.app-icon:focus {
+  outline-color: #cdd6f450; /* Catppuccin Mocha Text */
   background-color: #cdd6f414; /* Catppuccin Mocha Text */
-  border-radius: 10px;
 }
 
 #window-title {
