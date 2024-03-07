@@ -45,10 +45,10 @@ mod defaults {
     }
 
     pub fn next_window_key() -> String {
-        String::from("<Super_L>Tab")
+        String::from("<Super>Tab")
     }
 
     pub fn prev_window_key() -> String {
-        String::from("<Super_L><Shift_L>Tab")
+        String::from("<Super><Shift>Tab")
     }
 }

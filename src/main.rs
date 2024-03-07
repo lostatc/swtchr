@@ -8,7 +8,7 @@ use gtk::gdk::Display;
 use gtk::gio::{self, ActionEntry};
 use gtk::glib::{self, clone};
 use gtk::prelude::*;
-use gtk::{Application, ApplicationWindow, CssProvider, Settings};
+use gtk::{Application, ApplicationWindow, CssProvider, DirectionType, Settings};
 use gtk4_layer_shell::{KeyboardMode, Layer, LayerShell};
 use signal_hook::consts::signal::SIGUSR1;
 use signal_hook::iterator::Signals;
@@ -47,7 +47,7 @@ fn wait_for_display_signal(window: &ApplicationWindow) {
 
 fn register_actions(window: &ApplicationWindow) {
     // Make the window visible and capture keyboard events.
-    let action_display = ActionEntry::builder("display")
+    let display = ActionEntry::builder("display")
         .activate(|window: &ApplicationWindow, _, _| {
             window.set_keyboard_mode(KeyboardMode::Exclusive);
             window.set_visible(true);
@@ -55,14 +55,26 @@ fn register_actions(window: &ApplicationWindow) {
         .build();
 
     // Hide the window and release control of the keyboard.
-    let action_hide = ActionEntry::builder("hide")
+    let hide = ActionEntry::builder("hide")
         .activate(|window: &ApplicationWindow, _, _| {
             window.set_keyboard_mode(KeyboardMode::None);
             window.set_visible(false);
         })
         .build();
 
-    window.add_action_entries([action_display, action_hide]);
+    let focus_next = ActionEntry::builder("focus-next")
+        .activate(|window: &ApplicationWindow, _, _| {
+            window.child_focus(DirectionType::TabForward);
+        })
+        .build();
+
+    let focus_prev = ActionEntry::builder("focus-prev")
+        .activate(|window: &ApplicationWindow, _, _| {
+            window.child_focus(DirectionType::TabBackward);
+        })
+        .build();
+
+    window.add_action_entries([display, hide, focus_next, focus_prev]);
 }
 
 fn build_window(config: &Config, app: &Application) {
@@ -103,6 +115,12 @@ fn load_css() {
 fn register_keybinds(config: &Config, app: &Application) {
     // Hide the overlay.
     app.set_accels_for_action("win.hide", &[&config.keymap.dismiss]);
+
+    // Focus the next app in the switcher.
+    app.set_accels_for_action("win.focus-next", &[&config.keymap.next_window]);
+
+    // Focus the previous app in the switcher.
+    app.set_accels_for_action("win.focus-prev", &[&config.keymap.prev_window]);
 }
 
 fn main() -> eyre::Result<()> {
