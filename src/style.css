@@ -17,7 +17,7 @@ window {
 }
 
 .app-icon:focus {
-  outline-color: #cdd6f450; /* Catppuccin Mocha Text */
+  outline-color: #cdd6f490; /* Catppuccin Mocha Text */
   background-color: #cdd6f414; /* Catppuccin Mocha Text */
 }
 
