@@ -1,5 +1,5 @@
 use glib::Object;
-use gtk::glib;
+use gtk::glib::{self, clone};
 use gtk::prelude::*;
 
 use super::app_button::AppButton;
@@ -11,11 +11,17 @@ glib::wrapper! {
 }
 
 impl AppBar {
-    pub fn new(apps: &[AppButton]) -> Self {
-        let obj: AppBar = Object::builder().build();
+    pub fn new(app_buttons: &[AppButton]) -> Self {
+        let obj: Self = Object::builder().build();
 
-        for app in apps {
-            obj.append(app);
+        for button in app_buttons.iter() {
+            obj.append(button);
+        }
+
+        for app_button in app_buttons.iter() {
+            app_button.connect_has_focus_notify(clone!(@weak obj => move |button| {
+                obj.set_current_title(button.window_title());
+            }));
         }
 
         obj
@@ -23,13 +29,20 @@ impl AppBar {
 }
 
 mod imp {
+    use std::cell::RefCell;
+
+    use glib::Properties;
     use gtk::glib;
     use gtk::prelude::*;
     use gtk::subclass::prelude::*;
     use gtk::{Align, Orientation};
 
-    #[derive(Debug, Default)]
-    pub struct AppBar;
+    #[derive(Debug, Default, Properties)]
+    #[properties(wrapper_type = super::AppBar)]
+    pub struct AppBar {
+        #[property(get, set)]
+        current_title: RefCell<String>,
+    }
 
     #[glib::object_subclass]
     impl ObjectSubclass for AppBar {
@@ -38,6 +51,7 @@ mod imp {
         type ParentType = gtk::Box;
     }
 
+    #[glib::derived_properties]
     impl ObjectImpl for AppBar {
         fn constructed(&self) {
             self.obj().set_orientation(Orientation::Horizontal);

@@ -3,34 +3,57 @@ mod app_button;
 mod overlay;
 
 use gtk::prelude::*;
-use gtk::{Align, Box as GtkBox, Label, Orientation, Widget};
+use gtk::Widget;
 
-use app_bar::AppBar;
-use app_button::AppButton;
+use crate::model::Window;
+
+use self::overlay::Overlay;
 
 pub fn overlay() -> impl IsA<Widget> {
-    let icon_bar = GtkBox::builder()
-        .orientation(Orientation::Vertical)
-        .spacing(15)
-        .halign(Align::Center)
-        .valign(Align::Center)
-        .name("overlay")
-        .build();
+    Overlay::new(&[
+        Window {
+            id: String::from("wezterm-id"),
+            title: String::from("Wezterm - neovim"),
+            icon_name: String::from("org.wezfurlong.wezterm"),
+        },
+        Window {
+            id: String::from("firefox-id"),
+            title: String::from("Firefox - GitHub"),
+            icon_name: String::from("firefox"),
+        },
+        Window {
+            id: String::from("vlc-id"),
+            title: String::from("VLC - screencast.mp4"),
+            icon_name: String::from("vlc"),
+        },
+        Window {
+            id: String::from("rhythmbox-id"),
+            title: String::from("Rhythmbox - Lemon Boy"),
+            icon_name: String::from("rhythmbox"),
+        },
+    ])
+    // let icon_bar = GtkBox::builder()
+    //     .orientation(Orientation::Vertical)
+    //     .spacing(15)
+    //     .halign(Align::Center)
+    //     .valign(Align::Center)
+    //     .name("overlay")
+    //     .build();
 
-    let window_label = Label::builder()
-        .label("WezTerm - neovim")
-        .justify(gtk::Justification::Center)
-        .name("window-title")
-        .build();
+    // let window_label = Label::builder()
+    //     .label("WezTerm - neovim")
+    //     .justify(gtk::Justification::Center)
+    //     .name("window-title")
+    //     .build();
 
-    icon_bar.append(&AppBar::new(&[
-        AppButton::new(String::from("org.wezfurlong.wezterm")),
-        AppButton::new(String::from("firefox")),
-        AppButton::new(String::from("vlc")),
-        AppButton::new(String::from("rhythmbox")),
-    ]));
+    // icon_bar.append(&AppBar::new(&[
+    //     Appbutton::new("wezterm-id", "org.wezfurlong.wezterm"),
+    //     Appbutton::new("firefox-id", "firefox"),
+    //     Appbutton::new("vlc-id", "vlc"),
+    //     Appbutton::new("rhyhmbox-id", "rhythmbox"),
+    // ]));
 
-    icon_bar.append(&window_label);
+    // icon_bar.append(&window_label);
 
-    icon_bar
+    // icon_bar
 }
