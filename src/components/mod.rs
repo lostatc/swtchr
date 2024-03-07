@@ -32,28 +32,4 @@ pub fn overlay() -> impl IsA<Widget> {
             icon_name: String::from("rhythmbox"),
         },
     ])
-    // let icon_bar = GtkBox::builder()
-    //     .orientation(Orientation::Vertical)
-    //     .spacing(15)
-    //     .halign(Align::Center)
-    //     .valign(Align::Center)
-    //     .name("overlay")
-    //     .build();
-
-    // let window_label = Label::builder()
-    //     .label("WezTerm - neovim")
-    //     .justify(gtk::Justification::Center)
-    //     .name("window-title")
-    //     .build();
-
-    // icon_bar.append(&AppBar::new(&[
-    //     Appbutton::new("wezterm-id", "org.wezfurlong.wezterm"),
-    //     Appbutton::new("firefox-id", "firefox"),
-    //     Appbutton::new("vlc-id", "vlc"),
-    //     Appbutton::new("rhyhmbox-id", "rhythmbox"),
-    // ]));
-
-    // icon_bar.append(&window_label);
-
-    // icon_bar
 }
