@@ -11,6 +11,7 @@ gtk = { version = "0.7.3", package = "gtk4", features = ["v4_12"] }
 gtk4-layer-shell = "0.2.0"
 serde = { version = "1.0.197", features = ["derive"] }
 signal-hook = "0.3.17"
+swayipc = "3.0.2"
 
 [lints.rust]
 unsafe_code = "forbid"

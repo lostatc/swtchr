@@ -1,6 +1,7 @@
 mod components;
 mod config;
 mod model;
+mod sway;
 
 use components::overlay;
 use eyre::bail;
