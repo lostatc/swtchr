@@ -3,7 +3,10 @@ use std::sync::mpsc;
 use std::thread;
 use swayipc::{self, Connection, Event, EventType, WindowChange};
 
-fn filter_event(event_result: swayipc::Fallible<Event>) -> eyre::Result<Option<WindowEvent>> {
+fn filter_event(
+    event_result: swayipc::Fallible<Event>,
+    urgent_first: bool,
+) -> eyre::Result<Option<WindowEvent>> {
     let event = event_result.wrap_err("failed reading Sway event result")?;
 
     let window_event = match event {
@@ -13,9 +16,13 @@ fn filter_event(event_result: swayipc::Fallible<Event>) -> eyre::Result<Option<W
 
     match window_event.change {
         WindowChange::New | WindowChange::Focus | WindowChange::Urgent => {
-            if window_event.change == WindowChange::Urgent && !window_event.container.urgent {
-                // The window urgency changed, but from being urgent to being not-urgent. This
-                // shouldn't affect the order in the window switcher.
+            if window_event.change == WindowChange::Urgent
+                && (!urgent_first || !window_event.container.urgent)
+            {
+                // One of two things has happened:
+                // 1. Urgent-first window ordering is turned off.
+                // 2. The window urgency changed, but from being urgent to being not-urgent. This
+                //    shouldn't affect the order in the window switcher.
                 return Ok(None);
             }
 
@@ -29,7 +36,9 @@ fn filter_event(event_result: swayipc::Fallible<Event>) -> eyre::Result<Option<W
     }
 }
 
-fn subscribe_focus_events() -> eyre::Result<mpsc::Receiver<eyre::Result<WindowEvent>>> {
+pub fn subscribe_window_events(
+    urgent_first: bool,
+) -> eyre::Result<mpsc::Receiver<eyre::Result<WindowEvent>>> {
     let (sender, receiver) = mpsc::channel();
 
     let connection = Connection::new().wrap_err("failed acquiring a Sway IPC connection")?;
@@ -39,7 +48,7 @@ fn subscribe_focus_events() -> eyre::Result<mpsc::Receiver<eyre::Result<WindowEv
 
     thread::spawn(move || -> eyre::Result<()> {
         for event_result in subscription {
-            if let Some(result) = filter_event(event_result).transpose() {
+            if let Some(result) = filter_event(event_result, urgent_first).transpose() {
                 sender
                     .send(result)
                     .expect("failed sending Sway window event result to channel");

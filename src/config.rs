@@ -16,6 +16,8 @@ pub struct KeymapConfig {
 pub struct Config {
     pub icon_theme: Option<String>,
     pub font: Option<String>,
+    #[serde(default = "defaults::urgent_first")]
+    pub urgent_first: bool,
     pub keymap: KeymapConfig,
 }
 
@@ -25,6 +27,7 @@ impl Config {
         Ok(Config {
             icon_theme: Some(String::from("Papirus-Dark")),
             font: Some(String::from("Fira Sans 13")),
+            urgent_first: defaults::urgent_first(),
             keymap: KeymapConfig {
                 dismiss: defaults::dismiss_key(),
                 select: defaults::select_key(),
@@ -50,5 +53,9 @@ mod defaults {
 
     pub fn prev_window_key() -> String {
         String::from("<Super><Shift>Tab")
+    }
+
+    pub fn urgent_first() -> bool {
+        true
     }
 }
