@@ -12,9 +12,15 @@ fn filter_event(event_result: swayipc::Fallible<Event>) -> eyre::Result<Option<W
     };
 
     match window_event.change {
-        WindowChange::New | WindowChange::Focus => {
+        WindowChange::New | WindowChange::Focus | WindowChange::Urgent => {
+            if window_event.change == WindowChange::Urgent && !window_event.container.urgent {
+                // The window urgency changed, but from being urgent to being not-urgent. This
+                // shouldn't affect the order in the window switcher.
+                return Ok(None);
+            }
+
             match Window::from_node(window_event.container) {
-                Some(sway_window) => Ok(Some(WindowEvent::FocusOrNew(sway_window))),
+                Some(sway_window) => Ok(Some(WindowEvent::Focus(sway_window))),
                 None => Ok(None),
             }
         }
@@ -51,14 +57,16 @@ fn subscribe_focus_events() -> eyre::Result<mpsc::Receiver<eyre::Result<WindowEv
 pub type SwayNodeId = i64;
 
 pub enum WindowEvent {
-    FocusOrNew(Window),
+    // A window was focused, created, or marked urgent.
+    Focus(Window),
+
+    // A window was closed.
     Close(SwayNodeId),
 }
 
 #[derive(Debug)]
 pub struct Window {
     pub id: SwayNodeId,
-    pub urgent: bool,
     pub window_title: String,
     pub app_id: String,
 }
@@ -69,7 +77,6 @@ impl Window {
         if let (Some(name), Some(app_id)) = (node.name, node.app_id) {
             Some(Self {
                 id: node.id,
-                urgent: node.urgent,
                 window_title: name,
                 app_id,
             })

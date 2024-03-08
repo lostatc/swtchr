@@ -15,7 +15,7 @@ pub struct WindowQueue {
 impl WindowQueue {
     pub fn push_event(&mut self, event: WindowEvent) {
         match event {
-            WindowEvent::FocusOrNew(window) => {
+            WindowEvent::Focus(window) => {
                 self.highest_priority += 1;
 
                 self.map
