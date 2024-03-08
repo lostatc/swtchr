@@ -38,6 +38,7 @@ fn filter_event(
     }
 }
 
+#[derive(Debug)]
 pub struct WindowSubscription {
     // Send a command to the actor thread to send the current sorted window list.
     command: mpsc::Sender<()>,

@@ -39,7 +39,7 @@ mod imp {
     #[properties(wrapper_type = super::AppButton)]
     pub struct AppButton {
         #[property(get, set)]
-        window_id: RefCell<String>,
+        window_id: RefCell<i64>,
         #[property(get, set)]
         window_title: RefCell<String>,
     }

@@ -2,18 +2,22 @@ mod components;
 mod config;
 mod sway;
 
-use components::overlay;
-use eyre::bail;
+use std::thread;
+use std::time::Duration;
+
+use components::{Overlay, Window};
+use eyre::{bail, WrapErr};
 use gtk::gdk::Display;
 use gtk::gio::{self, ActionEntry};
 use gtk::glib::{self, clone};
-use gtk::{prelude::*, Widget};
+use gtk::prelude::*;
 use gtk::{Application, ApplicationWindow, CssProvider, DirectionType, Settings};
 use gtk4_layer_shell::{KeyboardMode, Layer, LayerShell};
 use signal_hook::consts::signal::SIGUSR1;
 use signal_hook::iterator::Signals;
 
 use config::Config;
+use sway::WindowSubscription;
 
 const APP_ID: &str = "io.github.lostatc.swtchr";
 const WINDOW_TITLE: &str = "swtchr";
@@ -77,7 +81,7 @@ fn register_actions(window: &ApplicationWindow) {
     window.add_action_entries([display, hide, focus_next, focus_prev]);
 }
 
-fn build_window(config: &Config, widget: &impl IsA<Widget>, app: &Application) {
+fn build_window(config: &Config, windows: &[Window], app: &Application) {
     let window = ApplicationWindow::builder()
         .application(app)
         .title(WINDOW_TITLE)
@@ -96,7 +100,7 @@ fn build_window(config: &Config, widget: &impl IsA<Widget>, app: &Application) {
     wait_for_display_signal(&window);
 
     // The window is initially hidden until it receives the signal to display itself.
-    window.set_child(Some(widget));
+    window.set_child(Some(&Overlay::new(windows)));
     window.present();
     window.set_visible(false);
 }
@@ -124,16 +128,29 @@ fn register_keybinds(config: &Config, app: &Application) {
 }
 
 fn main() -> eyre::Result<()> {
+    color_eyre::install()?;
+
     let config = Config::read()?;
+
+    let subscription = WindowSubscription::subscribe(config.urgent_first)
+        .wrap_err("failed getting Sway window subscription")?;
+
+    thread::sleep(Duration::from_secs(5));
+
+    let windows = subscription
+        .get_window_list()?
+        .into_iter()
+        .map(Window::from)
+        .collect::<Vec<_>>();
 
     let app = Application::builder().application_id(APP_ID).build();
 
     register_keybinds(&config, &app);
 
-    let overlay = overlay(&config)?;
-
     app.connect_startup(|_| load_css());
-    app.connect_activate(move |app| build_window(&config, &overlay, app));
+    app.connect_activate(
+        clone!(@strong windows => move |app| build_window(&config, &windows, app)),
+    );
 
     let exit_code = app.run();
 
