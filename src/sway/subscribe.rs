@@ -1,7 +1,9 @@
 use eyre::WrapErr;
-use std::sync::mpsc;
+use std::sync::{mpsc, Arc, RwLock};
 use std::thread;
 use swayipc::{self, Connection, Event, EventType, WindowChange};
+
+use super::queue::WindowQueue;
 
 fn filter_event(
     event_result: swayipc::Fallible<Event>,
@@ -36,31 +38,76 @@ fn filter_event(
     }
 }
 
-pub fn subscribe_window_events(
-    urgent_first: bool,
-) -> eyre::Result<mpsc::Receiver<eyre::Result<WindowEvent>>> {
-    let (sender, receiver) = mpsc::channel();
+pub struct WindowSubscription {
+    // Send a command to the actor thread to send the current sorted window list.
+    command: mpsc::Sender<()>,
 
-    let connection = Connection::new().wrap_err("failed acquiring a Sway IPC connection")?;
-    let subscription = connection
-        .subscribe([EventType::Window])
-        .wrap_err("failed opening a Sway window event subscription")?;
+    // Receive the current sorted window list.
+    response: mpsc::Receiver<eyre::Result<Vec<Window>>>,
+}
 
-    thread::spawn(move || -> eyre::Result<()> {
-        for event_result in subscription {
-            if let Some(result) = filter_event(event_result, urgent_first).transpose() {
-                sender
-                    .send(result)
-                    .expect("failed sending Sway window event result to channel");
-            } else {
-                continue;
+impl WindowSubscription {
+    pub fn subscribe(urgent_first: bool) -> eyre::Result<WindowSubscription> {
+        let (command_sender, command_reciever) = mpsc::channel();
+        let (response_sender, response_reciever) = mpsc::channel();
+
+        let connection = Connection::new().wrap_err("failed acquiring a Sway IPC connection")?;
+        let subscription = connection
+            .subscribe([EventType::Window])
+            .wrap_err("failed opening a Sway window event subscription")?;
+
+        let pushing_window_queue = Arc::new(RwLock::new(WindowQueue::new()));
+        let listing_window_queue = Arc::clone(&pushing_window_queue);
+
+        let err_response_sender = Arc::new(response_sender);
+        let ok_response_sender = Arc::clone(&err_response_sender);
+
+        // Subscribe to events from the Sway IPC API and update the window priority queue.
+        thread::spawn(move || {
+            for event_result in subscription {
+                if let Some(result) = filter_event(event_result, urgent_first).transpose() {
+                    match result {
+                        Ok(event) => {
+                            pushing_window_queue
+                                .write()
+                                .expect("window queue lock is poisoned")
+                                .push_event(event);
+                        }
+                        Err(err) => err_response_sender
+                            .send(Err(err))
+                            .expect("channel closed unexpectedly"),
+                    }
+                } else {
+                    continue;
+                }
             }
-        }
+        });
 
-        Ok(())
-    });
+        // Wait for a command to get the current sorted list of windows from the window priority
+        // queue.
+        thread::spawn(move || loop {
+            command_reciever
+                .recv()
+                .expect("channel closed unexpectedly");
 
-    Ok(receiver)
+            ok_response_sender
+                .send(Ok(listing_window_queue
+                    .read()
+                    .expect("channel closed unexpectedly")
+                    .sorted_windows()))
+                .expect("");
+        });
+
+        Ok(Self {
+            command: command_sender,
+            response: response_reciever,
+        })
+    }
+
+    pub fn get_window_list(&self) -> eyre::Result<Vec<Window>> {
+        self.command.send(()).expect("channel closed unexpectedly");
+        self.response.recv().expect("channel closed unexpectedly")
+    }
 }
 
 pub type SwayNodeId = i64;
@@ -73,7 +120,7 @@ pub enum WindowEvent {
     Close(SwayNodeId),
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Window {
     pub id: SwayNodeId,
     pub window_title: String,
