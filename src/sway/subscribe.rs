@@ -1,6 +1,8 @@
-use eyre::WrapErr;
+use std::sync::mpsc::sync_channel;
 use std::sync::{mpsc, Arc, RwLock};
 use std::thread;
+
+use eyre::{bail, eyre, WrapErr};
 use swayipc::{self, Connection, Event, EventType, WindowChange};
 
 use super::queue::WindowQueue;
@@ -40,43 +42,39 @@ fn filter_event(
 
 #[derive(Debug)]
 pub struct WindowSubscription {
-    // Send a command to the actor thread to send the current sorted window list.
-    command: mpsc::Sender<()>,
-
-    // Receive the current sorted window list.
-    response: mpsc::Receiver<eyre::Result<Vec<Window>>>,
+    queue: Arc<RwLock<WindowQueue>>,
+    errors: mpsc::Receiver<eyre::Report>,
 }
 
 impl WindowSubscription {
     pub fn subscribe(urgent_first: bool) -> eyre::Result<WindowSubscription> {
-        let (command_sender, command_reciever) = mpsc::channel();
-        let (response_sender, response_reciever) = mpsc::channel();
+        // We use a rendezvous channel because we don't want the errors piling up in an infinite
+        // channel buffer until the next time the user opens the window switcher. The subscription
+        // listener thread will block on the first error it encounters, and then that error will be
+        // propagated next time the user opens the window switcher.
+        let (err_sender, err_receiver) = sync_channel(0);
 
         let connection = Connection::new().wrap_err("failed acquiring a Sway IPC connection")?;
         let subscription = connection
             .subscribe([EventType::Window])
             .wrap_err("failed opening a Sway window event subscription")?;
 
-        let pushing_window_queue = Arc::new(RwLock::new(WindowQueue::new()));
-        let listing_window_queue = Arc::clone(&pushing_window_queue);
+        let sending_queue = Arc::new(RwLock::new(WindowQueue::new()));
+        let receiving_queue = Arc::clone(&sending_queue);
 
-        let err_response_sender = Arc::new(response_sender);
-        let ok_response_sender = Arc::clone(&err_response_sender);
-
-        // Subscribe to events from the Sway IPC API and update the window priority queue.
         thread::spawn(move || {
             for event_result in subscription {
                 if let Some(result) = filter_event(event_result, urgent_first).transpose() {
                     match result {
                         Ok(event) => {
-                            match pushing_window_queue.write() {
+                            match sending_queue.write() {
                                 Ok(mut queue) => queue.push_event(event),
                                 // Lock is poisoned.
                                 Err(_) => break,
                             }
                         }
                         Err(err) => {
-                            let is_closed = err_response_sender.send(Err(err)).is_err();
+                            let is_closed = err_sender.send(err).is_err();
 
                             if is_closed {
                                 break;
@@ -89,37 +87,27 @@ impl WindowSubscription {
             }
         });
 
-        // Wait for a command to get the current sorted list of windows from the window priority
-        // queue.
-        thread::spawn(move || loop {
-            let is_closed = command_reciever.recv().is_err();
-
-            if is_closed {
-                break;
-            }
-
-            let sorted_windows = match listing_window_queue.read() {
-                Ok(queue) => queue.sorted_windows(),
-                // Lock is poisoned.
-                Err(_) => break,
-            };
-
-            let is_closed = ok_response_sender.send(Ok(sorted_windows)).is_err();
-
-            if is_closed {
-                break;
-            }
-        });
-
         Ok(Self {
-            command: command_sender,
-            response: response_reciever,
+            queue: receiving_queue,
+            errors: err_receiver,
         })
     }
 
     pub fn get_window_list(&self) -> eyre::Result<Vec<Window>> {
-        self.command.send(()).expect("channel closed unexpectedly");
-        self.response.recv().expect("channel closed unexpectedly")
+        // See if any errors have occurred since we last polled the window list.
+        match self.errors.try_recv() {
+            Ok(err) => return Err(err),
+            // Only fail when the channel is disconnected, not when the channel is empty.
+            Err(mpsc::TryRecvError::Disconnected) => {
+                bail!("window priority queue errors channel closed unexpectedly");
+            }
+            _ => {}
+        }
+
+        match self.queue.read() {
+            Ok(queue) => Ok(queue.sorted_windows()),
+            Err(_) => Err(eyre!("lock on window priority queue is poisoned")),
+        }
     }
 }
 
