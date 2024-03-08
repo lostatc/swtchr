@@ -69,14 +69,19 @@ impl WindowSubscription {
                 if let Some(result) = filter_event(event_result, urgent_first).transpose() {
                     match result {
                         Ok(event) => {
-                            pushing_window_queue
-                                .write()
-                                .expect("window queue lock is poisoned")
-                                .push_event(event);
+                            match pushing_window_queue.write() {
+                                Ok(mut queue) => queue.push_event(event),
+                                // Lock is poisoned.
+                                Err(_) => break,
+                            }
                         }
-                        Err(err) => err_response_sender
-                            .send(Err(err))
-                            .expect("channel closed unexpectedly"),
+                        Err(err) => {
+                            let is_closed = err_response_sender.send(Err(err)).is_err();
+
+                            if is_closed {
+                                break;
+                            }
+                        }
                     }
                 } else {
                     continue;
@@ -87,16 +92,23 @@ impl WindowSubscription {
         // Wait for a command to get the current sorted list of windows from the window priority
         // queue.
         thread::spawn(move || loop {
-            command_reciever
-                .recv()
-                .expect("channel closed unexpectedly");
+            let is_closed = command_reciever.recv().is_err();
 
-            ok_response_sender
-                .send(Ok(listing_window_queue
-                    .read()
-                    .expect("channel closed unexpectedly")
-                    .sorted_windows()))
-                .expect("");
+            if is_closed {
+                break;
+            }
+
+            let sorted_windows = match listing_window_queue.read() {
+                Ok(queue) => queue.sorted_windows(),
+                // Lock is poisoned.
+                Err(_) => break,
+            };
+
+            let is_closed = ok_response_sender.send(Ok(sorted_windows)).is_err();
+
+            if is_closed {
+                break;
+            }
         });
 
         Ok(Self {
