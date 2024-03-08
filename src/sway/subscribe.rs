@@ -3,7 +3,7 @@ use std::sync::mpsc;
 use std::thread;
 use swayipc::{self, Connection, Event, EventType, WindowChange};
 
-fn filter_event(event_result: swayipc::Fallible<Event>) -> eyre::Result<Option<SwayWindow>> {
+fn filter_event(event_result: swayipc::Fallible<Event>) -> eyre::Result<Option<SwayWindowEvent>> {
     let event = event_result.wrap_err("failed reading Sway event result")?;
 
     let window_event = match event {
@@ -11,14 +11,19 @@ fn filter_event(event_result: swayipc::Fallible<Event>) -> eyre::Result<Option<S
         _ => return Ok(None),
     };
 
-    if window_event.change != WindowChange::Focus {
-        return Ok(None);
+    match window_event.change {
+        WindowChange::New | WindowChange::Focus => {
+            match SwayWindow::from_node(window_event.container) {
+                Some(sway_window) => Ok(Some(SwayWindowEvent::Focus(sway_window))),
+                None => Ok(None),
+            }
+        }
+        WindowChange::Close => Ok(Some(SwayWindowEvent::Close(window_event.container.id))),
+        _ => Ok(None),
     }
-
-    Ok(SwayWindow::from_node(window_event.container))
 }
 
-fn subscribe_focus_events() -> eyre::Result<mpsc::Receiver<eyre::Result<SwayWindow>>> {
+fn subscribe_focus_events() -> eyre::Result<mpsc::Receiver<eyre::Result<SwayWindowEvent>>> {
     let (sender, receiver) = mpsc::channel();
 
     let connection = Connection::new().wrap_err("failed acquiring a Sway IPC connection")?;
@@ -44,6 +49,11 @@ fn subscribe_focus_events() -> eyre::Result<mpsc::Receiver<eyre::Result<SwayWind
 }
 
 type SwayNodeId = i64;
+
+pub enum SwayWindowEvent {
+    Focus(SwayWindow),
+    Close(SwayNodeId),
+}
 
 #[derive(Debug)]
 pub struct SwayWindow {
