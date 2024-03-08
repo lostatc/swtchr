@@ -3,7 +3,7 @@ use gtk::glib;
 use gtk::prelude::*;
 use gtk::Image;
 
-use crate::model::Window;
+use super::model::Window;
 
 glib::wrapper! {
     pub struct AppButton(ObjectSubclass<imp::AppButton>)

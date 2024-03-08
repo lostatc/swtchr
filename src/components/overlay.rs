@@ -3,7 +3,7 @@ use gtk::glib;
 use gtk::prelude::*;
 use gtk::Label;
 
-use crate::model::Window;
+use super::model::Window;
 
 use super::{app_bar::AppBar, app_button::AppButton};
 
@@ -44,7 +44,7 @@ mod imp {
     use gtk::subclass::prelude::*;
     use gtk::{Align, Orientation};
 
-    use crate::model::WindowList;
+    use crate::components::model::WindowList;
 
     #[derive(Debug, Default)]
     pub struct Overlay {
