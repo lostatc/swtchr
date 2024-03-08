@@ -3,7 +3,7 @@ use std::sync::mpsc;
 use std::thread;
 use swayipc::{self, Connection, Event, EventType, WindowChange};
 
-fn filter_event(event_result: swayipc::Fallible<Event>) -> eyre::Result<Option<SwayWindowEvent>> {
+fn filter_event(event_result: swayipc::Fallible<Event>) -> eyre::Result<Option<WindowEvent>> {
     let event = event_result.wrap_err("failed reading Sway event result")?;
 
     let window_event = match event {
@@ -13,17 +13,17 @@ fn filter_event(event_result: swayipc::Fallible<Event>) -> eyre::Result<Option<S
 
     match window_event.change {
         WindowChange::New | WindowChange::Focus => {
-            match SwayWindow::from_node(window_event.container) {
-                Some(sway_window) => Ok(Some(SwayWindowEvent::Focus(sway_window))),
+            match Window::from_node(window_event.container) {
+                Some(sway_window) => Ok(Some(WindowEvent::FocusOrNew(sway_window))),
                 None => Ok(None),
             }
         }
-        WindowChange::Close => Ok(Some(SwayWindowEvent::Close(window_event.container.id))),
+        WindowChange::Close => Ok(Some(WindowEvent::Close(window_event.container.id))),
         _ => Ok(None),
     }
 }
 
-fn subscribe_focus_events() -> eyre::Result<mpsc::Receiver<eyre::Result<SwayWindowEvent>>> {
+fn subscribe_focus_events() -> eyre::Result<mpsc::Receiver<eyre::Result<WindowEvent>>> {
     let (sender, receiver) = mpsc::channel();
 
     let connection = Connection::new().wrap_err("failed acquiring a Sway IPC connection")?;
@@ -48,22 +48,22 @@ fn subscribe_focus_events() -> eyre::Result<mpsc::Receiver<eyre::Result<SwayWind
     Ok(receiver)
 }
 
-type SwayNodeId = i64;
+pub type SwayNodeId = i64;
 
-pub enum SwayWindowEvent {
-    Focus(SwayWindow),
+pub enum WindowEvent {
+    FocusOrNew(Window),
     Close(SwayNodeId),
 }
 
 #[derive(Debug)]
-pub struct SwayWindow {
-    id: SwayNodeId,
-    urgent: bool,
-    window_title: String,
-    app_id: String,
+pub struct Window {
+    pub id: SwayNodeId,
+    pub urgent: bool,
+    pub window_title: String,
+    pub app_id: String,
 }
 
-impl SwayWindow {
+impl Window {
     // Returns `None` if the node is not a view.
     fn from_node(node: swayipc::Node) -> Option<Self> {
         if let (Some(name), Some(app_id)) = (node.name, node.app_id) {
