@@ -7,7 +7,7 @@ use eyre::bail;
 use gtk::gdk::Display;
 use gtk::gio::{self, ActionEntry};
 use gtk::glib::{self, clone};
-use gtk::prelude::*;
+use gtk::{prelude::*, Widget};
 use gtk::{Application, ApplicationWindow, CssProvider, DirectionType, Settings};
 use gtk4_layer_shell::{KeyboardMode, Layer, LayerShell};
 use signal_hook::consts::signal::SIGUSR1;
@@ -77,7 +77,7 @@ fn register_actions(window: &ApplicationWindow) {
     window.add_action_entries([display, hide, focus_next, focus_prev]);
 }
 
-fn build_window(config: &Config, app: &Application) {
+fn build_window(config: &Config, widget: &impl IsA<Widget>, app: &Application) {
     let window = ApplicationWindow::builder()
         .application(app)
         .title(WINDOW_TITLE)
@@ -96,7 +96,7 @@ fn build_window(config: &Config, app: &Application) {
     wait_for_display_signal(&window);
 
     // The window is initially hidden until it receives the signal to display itself.
-    window.set_child(Some(&overlay()));
+    window.set_child(Some(widget));
     window.present();
     window.set_visible(false);
 }
@@ -130,8 +130,10 @@ fn main() -> eyre::Result<()> {
 
     register_keybinds(&config, &app);
 
+    let overlay = overlay(&config)?;
+
     app.connect_startup(|_| load_css());
-    app.connect_activate(move |app| build_window(&config, app));
+    app.connect_activate(move |app| build_window(&config, &overlay, app));
 
     let exit_code = app.run();
 
