@@ -99,6 +99,7 @@ fn build_window(config: &Config, app: &Application, subscription: Rc<WindowSubsc
     let overlay = Overlay::new();
     window.set_child(Some(&overlay));
 
+    // Update the list of windows in the window switcher right before we display it.
     let on_display = Box::new(move || {
         let windows = subscription
             .get_window_list()
