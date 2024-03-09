@@ -27,13 +27,11 @@ impl IconLocator {
     }
 
     fn app_info(&self) -> Option<DesktopAppInfo> {
-        dbg!(self.best_option());
         let options = match self.best_option() {
             Some(best_option) => DesktopAppInfo::search(best_option),
             None => return None,
         };
 
-        dbg!(&options);
         for option_list in options {
             for desktop_file_id in option_list {
                 if let Some(app_info) = DesktopAppInfo::new(&desktop_file_id) {
