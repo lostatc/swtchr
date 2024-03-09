@@ -2,8 +2,7 @@ mod components;
 mod config;
 mod sway;
 
-use std::thread;
-use std::time::Duration;
+use std::rc::Rc;
 
 use components::{Overlay, Window};
 use eyre::{bail, WrapErr};
@@ -84,7 +83,7 @@ fn register_actions(app_window: &ApplicationWindow, on_display: DisplayCallback)
     app_window.add_action_entries([display, hide, focus_next, focus_prev]);
 }
 
-fn build_window(config: &Config, app: &Application, subscription: WindowSubscription) {
+fn build_window(config: &Config, app: &Application, subscription: Rc<WindowSubscription>) {
     let window = ApplicationWindow::builder()
         .application(app)
         .title(WINDOW_TITLE)
@@ -148,17 +147,17 @@ fn main() -> eyre::Result<()> {
 
     let config = Config::read()?;
 
-    let subscription = WindowSubscription::subscribe(config.urgent_first)
-        .wrap_err("failed getting Sway window subscription")?;
-
-    thread::sleep(Duration::from_secs(5));
+    let subscription = Rc::new(
+        WindowSubscription::subscribe(config.urgent_first)
+            .wrap_err("failed getting Sway window subscription")?,
+    );
 
     let app = Application::builder().application_id(APP_ID).build();
 
     register_keybinds(&config, &app);
 
     app.connect_startup(|_| load_css());
-    app.connect_activate(move |app| build_window(&config, app, subscription));
+    app.connect_activate(move |app| build_window(&config, app, Rc::clone(&subscription)));
 
     let exit_code = app.run();
 
