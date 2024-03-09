@@ -1,11 +1,8 @@
 use glib::Object;
 use gtk::glib;
-use gtk::prelude::*;
-use gtk::Label;
+use gtk::glib::subclass::types::ObjectSubclassIsExt;
 
 use super::model::Window;
-
-use super::{app_bar::AppBar, app_button::AppButton};
 
 glib::wrapper! {
     pub struct Overlay(ObjectSubclass<imp::Overlay>)
@@ -17,38 +14,47 @@ impl Overlay {
     pub fn new(windows: &[Window]) -> Self {
         let obj: Self = Object::builder().build();
 
-        let app_bar = AppBar::new(&windows.iter().map(AppButton::new).collect::<Vec<_>>());
-
-        let window_label = Label::builder()
-            .justify(gtk::Justification::Center)
-            .name("window-title")
-            .build();
-
-        app_bar
-            .bind_property("current-title", &window_label, "label")
-            .sync_create()
-            .build();
-
-        obj.append(&app_bar);
-        obj.append(&window_label);
+        obj.imp().update_windows(windows);
 
         obj
     }
 }
 
 mod imp {
-    use std::cell::RefCell;
-
     use gtk::glib;
     use gtk::prelude::*;
     use gtk::subclass::prelude::*;
-    use gtk::{Align, Orientation};
+    use gtk::{Align, Label, Orientation};
 
-    use crate::components::model::WindowList;
+    use crate::components::app_bar::AppBar;
+    use crate::components::app_button::AppButton;
+    use crate::components::Window;
 
     #[derive(Debug, Default)]
-    pub struct Overlay {
-        pub windows: RefCell<WindowList>,
+    pub struct Overlay;
+
+    impl Overlay {
+        pub fn update_windows(&self, windows: &[Window]) {
+            // Remove all children.
+            while let Some(child) = self.obj().last_child() {
+                self.obj().remove(&child);
+            }
+
+            let app_bar = AppBar::new(&windows.iter().map(AppButton::new).collect::<Vec<_>>());
+
+            let window_label = Label::builder()
+                .name("window-title")
+                .justify(gtk::Justification::Center)
+                .build();
+
+            app_bar
+                .bind_property("current-title", &window_label, "label")
+                .sync_create()
+                .build();
+
+            self.obj().append(&app_bar);
+            self.obj().append(&window_label);
+        }
     }
 
     #[glib::object_subclass]

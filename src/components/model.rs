@@ -16,5 +16,3 @@ impl From<SwayWindow> for Window {
         }
     }
 }
-
-pub type WindowList = Vec<Window>;
