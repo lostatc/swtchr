@@ -26,6 +26,7 @@ impl AppButton {
 }
 
 mod imp {
+    use std::cell::Cell;
     use std::cell::RefCell;
 
     use glib::Properties;
@@ -33,11 +34,14 @@ mod imp {
     use gtk::prelude::*;
     use gtk::subclass::prelude::*;
 
+    use crate::sway::switch_window;
+    use crate::sway::SwayWindowId;
+
     #[derive(Debug, Default, Properties)]
     #[properties(wrapper_type = super::AppButton)]
     pub struct AppButton {
         #[property(get, set)]
-        window_id: RefCell<i64>,
+        window_id: Cell<SwayWindowId>,
         #[property(get, set)]
         window_title: RefCell<String>,
     }
@@ -54,5 +58,9 @@ mod imp {
 
     impl WidgetImpl for AppButton {}
 
-    impl ButtonImpl for AppButton {}
+    impl ButtonImpl for AppButton {
+        fn clicked(&self) {
+            switch_window(self.window_id.get()).unwrap();
+        }
+    }
 }

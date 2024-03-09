@@ -3,6 +3,7 @@ use std::sync::{mpsc, Arc, RwLock};
 use std::thread;
 
 use eyre::{bail, eyre, WrapErr};
+use gtk::glib;
 use swayipc::{self, Connection, Event, EventType, WindowChange};
 
 use super::queue::WindowQueue;
@@ -35,7 +36,9 @@ fn filter_event(
                 window_event.container,
             ))))
         }
-        WindowChange::Close => Ok(Some(WindowEvent::Close(window_event.container.id))),
+        WindowChange::Close => Ok(Some(WindowEvent::Close(SwayWindowId(
+            window_event.container.id,
+        )))),
         _ => Ok(None),
     }
 }
@@ -111,19 +114,20 @@ impl WindowSubscription {
     }
 }
 
-pub type SwayNodeId = i64;
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Hash, glib::ValueDelegate)]
+pub struct SwayWindowId(pub(super) i64);
 
 pub enum WindowEvent {
     // A window was focused, created, or marked urgent.
     Focus(Window),
 
     // A window was closed.
-    Close(SwayNodeId),
+    Close(SwayWindowId),
 }
 
 #[derive(Debug, Clone)]
 pub struct Window {
-    pub id: SwayNodeId,
+    pub id: SwayWindowId,
     pub title: String,
     pub icon_locator: IconLocator,
 }
@@ -131,7 +135,7 @@ pub struct Window {
 impl From<swayipc::Node> for Window {
     fn from(node: swayipc::Node) -> Self {
         Self {
-            id: node.id,
+            id: SwayWindowId(node.id),
             title: node.name.as_ref().cloned().unwrap_or_else(String::new),
             icon_locator: node.into(),
         }

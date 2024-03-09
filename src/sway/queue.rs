@@ -1,7 +1,7 @@
 use std::cmp;
 use std::collections::HashMap;
 
-use super::subscribe::{SwayNodeId, Window, WindowEvent};
+use super::subscribe::{SwayWindowId, Window, WindowEvent};
 
 #[derive(Debug, Clone)]
 struct WindowPriority {
@@ -11,7 +11,7 @@ struct WindowPriority {
 
 #[derive(Debug)]
 pub struct WindowQueue {
-    map: HashMap<SwayNodeId, WindowPriority>,
+    map: HashMap<SwayWindowId, WindowPriority>,
     // We're assuming this is big enough to never overflow.
     highest_priority: u64,
 }
