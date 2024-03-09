@@ -4,17 +4,19 @@ mod sway;
 
 use std::rc::Rc;
 
-use components::Overlay;
 use eyre::{bail, WrapErr};
 use gtk::gdk::Display;
 use gtk::gio::{self, ActionEntry};
 use gtk::glib::{self, clone};
 use gtk::prelude::*;
-use gtk::{Application, ApplicationWindow, CssProvider, DirectionType, Settings};
+use gtk::{
+    Application, ApplicationWindow, CssProvider, DirectionType, EventControllerKey, Settings,
+};
 use gtk4_layer_shell::{KeyboardMode, Layer, LayerShell};
 use signal_hook::consts::signal::SIGUSR1;
 use signal_hook::iterator::Signals;
 
+use components::Overlay;
 use config::Config;
 use sway::WindowSubscription;
 
@@ -89,6 +91,33 @@ fn register_actions(app_window: &ApplicationWindow, on_display: DisplayCallback)
     app_window.add_action_entries([display, hide, focus_next, focus_prev, select]);
 }
 
+fn register_controllers(config: &Config, window: &ApplicationWindow) -> eyre::Result<()> {
+    if config.switch_on_release {
+        let (expected_key, expected_modifier) =
+            match gtk::accelerator_parse(&config.keymap.select_on_release) {
+                Some(pair) => pair,
+                None => bail!("could not parse keybind"),
+            };
+
+        let controller = EventControllerKey::new();
+
+        controller.connect_key_released(
+            clone!(@weak window => move |_, actual_key, _, actual_modifier| {
+                if actual_key == expected_key && actual_modifier == expected_modifier {
+                    gtk::prelude::WidgetExt::activate_action(&window, "win.select", None)
+                        .expect("failed to activate action to select window on key release");
+                    gtk::prelude::WidgetExt::activate_action(&window, "win.hide", None)
+                        .expect("failed to activate action to hide switcher on key release");
+                }
+            }),
+        );
+
+        window.add_controller(controller);
+    }
+
+    Ok(())
+}
+
 fn build_window(config: &Config, app: &Application, subscription: Rc<WindowSubscription>) {
     let window = ApplicationWindow::builder()
         .application(app)
@@ -111,6 +140,7 @@ fn build_window(config: &Config, app: &Application, subscription: Rc<WindowSubsc
     });
 
     register_actions(&window, on_display);
+    register_controllers(config, &window).unwrap();
 
     // Wait for the signal to display (un-hide) the overlay.
     wait_for_display_signal(&window);

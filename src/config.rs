@@ -6,6 +6,8 @@ pub struct KeymapConfig {
     pub dismiss: String,
     #[serde(default = "defaults::select_key")]
     pub select: String,
+    #[serde(default = "defaults::select_on_release_key")]
+    pub select_on_release: String,
     #[serde(default = "defaults::next_window_key")]
     pub next_window: String,
     #[serde(default = "defaults::prev_window_key")]
@@ -18,6 +20,8 @@ pub struct Config {
     pub font: Option<String>,
     #[serde(default = "defaults::urgent_first")]
     pub urgent_first: bool,
+    #[serde(default = "defaults::switch_on_release")]
+    pub switch_on_release: bool,
     pub keymap: KeymapConfig,
 }
 
@@ -28,9 +32,11 @@ impl Config {
             icon_theme: Some(String::from("Papirus-Dark")),
             font: Some(String::from("Fira Sans 13")),
             urgent_first: defaults::urgent_first(),
+            switch_on_release: defaults::switch_on_release(),
             keymap: KeymapConfig {
                 dismiss: defaults::dismiss_key(),
                 select: defaults::select_key(),
+                select_on_release: defaults::select_on_release_key(),
                 next_window: defaults::next_window_key(),
                 prev_window: defaults::prev_window_key(),
             },
@@ -39,6 +45,14 @@ impl Config {
 }
 
 mod defaults {
+    pub fn urgent_first() -> bool {
+        true
+    }
+
+    pub fn switch_on_release() -> bool {
+        true
+    }
+
     pub fn dismiss_key() -> String {
         String::from("Escape")
     }
@@ -47,15 +61,15 @@ mod defaults {
         String::from("Return")
     }
 
+    pub fn select_on_release_key() -> String {
+        String::from("<Super>Super_L")
+    }
+
     pub fn next_window_key() -> String {
         String::from("<Super>Tab")
     }
 
     pub fn prev_window_key() -> String {
         String::from("<Super><Shift>Tab")
-    }
-
-    pub fn urgent_first() -> bool {
-        true
     }
 }
