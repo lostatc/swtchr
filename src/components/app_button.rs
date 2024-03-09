@@ -13,13 +13,13 @@ glib::wrapper! {
 
 impl AppButton {
     pub fn new(window: &Window) -> Self {
-        let image_builder = match window.icon_locator.icon() {
-            Some(icon) => Image::builder().gicon(&icon),
-            // TODO: Show some sort of fallback/placeholder if we were not able to find an icon.
-            None => Image::builder().icon_name(""),
-        };
+        // TODO: Use a fallback/placeholder icon if one could not be found.
+        let image = window
+            .icon_locator
+            .icon()
+            .unwrap_or(Image::from_icon_name(""));
 
-        let image = image_builder.pixel_size(80).build();
+        image.set_pixel_size(80);
 
         Object::builder()
             .property("css-classes", ["app-icon"].to_value())

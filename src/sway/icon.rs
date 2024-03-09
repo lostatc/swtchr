@@ -1,4 +1,4 @@
-use gtk::gio::{DesktopAppInfo, Icon};
+use gtk::gio::DesktopAppInfo;
 use gtk::prelude::*;
 use swayipc::Node;
 
@@ -27,11 +27,13 @@ impl IconLocator {
     }
 
     fn app_info(&self) -> Option<DesktopAppInfo> {
+        dbg!(self.best_option());
         let options = match self.best_option() {
             Some(best_option) => DesktopAppInfo::search(best_option),
             None => return None,
         };
 
+        dbg!(&options);
         for option_list in options {
             for desktop_file_id in option_list {
                 if let Some(app_info) = DesktopAppInfo::new(&desktop_file_id) {
@@ -43,8 +45,14 @@ impl IconLocator {
         None
     }
 
-    pub fn icon(&self) -> Option<Icon> {
-        self.app_info()?.icon()
+    pub fn icon(&self) -> Option<gtk::Image> {
+        match self.app_info().and_then(|app_info| app_info.icon()) {
+            Some(gicon) => Some(gtk::Image::from_gicon(&gicon)),
+            None => self
+                .app_id
+                .as_ref()
+                .map(|app_id| gtk::Image::from_icon_name(app_id)),
+        }
     }
 }
 
