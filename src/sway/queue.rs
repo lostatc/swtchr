@@ -1,3 +1,4 @@
+use std::cmp;
 use std::collections::HashMap;
 
 use super::subscribe::{SwayNodeId, Window, WindowEvent};
@@ -44,10 +45,12 @@ impl WindowQueue {
         }
     }
 
+    // Return the list of windows in the queue sorted from most recently used to least recently
+    // used.
     pub fn sorted_windows(&self) -> Vec<Window> {
         let mut list = self.map.values().cloned().collect::<Vec<_>>();
 
-        list.sort_by_key(|window_priority| window_priority.priority);
+        list.sort_by_key(|window_priority| cmp::Reverse(window_priority.priority));
 
         list.into_iter()
             .map(|window_priority| window_priority.window)
