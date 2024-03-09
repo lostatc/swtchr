@@ -41,6 +41,12 @@ impl Overlay {
     }
 }
 
+impl Default for Overlay {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 mod imp {
     use gtk::glib;
     use gtk::prelude::*;
