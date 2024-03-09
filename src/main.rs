@@ -80,7 +80,13 @@ fn register_actions(app_window: &ApplicationWindow, on_display: DisplayCallback)
         })
         .build();
 
-    app_window.add_action_entries([display, hide, focus_next, focus_prev]);
+    let select = ActionEntry::builder("select")
+        .activate(|window: &ApplicationWindow, _, _| {
+            window.activate_default();
+        })
+        .build();
+
+    app_window.add_action_entries([display, hide, focus_next, focus_prev, select]);
 }
 
 fn build_window(config: &Config, app: &Application, subscription: Rc<WindowSubscription>) {
@@ -134,6 +140,9 @@ fn register_keybinds(config: &Config, app: &Application) {
 
     // Focus the previous app in the switcher.
     app.set_accels_for_action("win.focus-prev", &[&config.keymap.prev_window]);
+
+    // Switch to the currently selected window.
+    app.set_accels_for_action("win.select", &[&config.keymap.select]);
 }
 
 fn main() -> eyre::Result<()> {
