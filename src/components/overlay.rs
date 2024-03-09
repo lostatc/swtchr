@@ -24,7 +24,9 @@ impl Overlay {
             self.remove(&child);
         }
 
-        let app_bar = AppBar::new(&windows.iter().map(AppButton::new).collect::<Vec<_>>());
+        // The windows coming in are ordered from lowest to highest priority. We need to add them
+        // to the app bar in reverse order so the highest-priority ones come first.
+        let app_bar = AppBar::new(&windows.iter().rev().map(AppButton::new).collect::<Vec<_>>());
 
         let window_label = Label::builder()
             .name("window-title")
