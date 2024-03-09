@@ -1,7 +1,6 @@
 use glib::Object;
 use gtk::glib;
 use gtk::prelude::*;
-use gtk::Image;
 
 use crate::sway::Window;
 
@@ -13,11 +12,7 @@ glib::wrapper! {
 
 impl AppButton {
     pub fn new(window: &Window) -> Self {
-        // TODO: Use a fallback/placeholder icon if one could not be found.
-        let image = window
-            .icon_locator
-            .icon()
-            .unwrap_or(Image::from_icon_name(""));
+        let image = window.icon_locator.icon();
 
         image.set_pixel_size(80);
 

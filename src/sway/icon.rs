@@ -2,6 +2,9 @@ use gtk::gio::DesktopAppInfo;
 use gtk::prelude::*;
 use swayipc::Node;
 
+// The name of the standard icon used by Gnome when another icon could not be loaded.
+const GTK_MISSING_IMAGE_ICON: &str = "image-missing";
+
 #[derive(Debug, Clone)]
 pub struct IconLocator {
     // Only Wayland windows have an app ID.
@@ -43,13 +46,18 @@ impl IconLocator {
         None
     }
 
-    pub fn icon(&self) -> Option<gtk::Image> {
+    pub fn icon(&self) -> gtk::Image {
         match self.app_info().and_then(|app_info| app_info.icon()) {
-            Some(gicon) => Some(gtk::Image::from_gicon(&gicon)),
-            None => self
-                .app_id
-                .as_ref()
-                .map(|app_id| gtk::Image::from_icon_name(app_id)),
+            // Try to locate the app icon via its desktop entry.
+            Some(gicon) => gtk::Image::from_gicon(&gicon),
+            // Look for an icon in the current GTK theme for the window's Wayland app ID.
+            None => gtk::Image::from_icon_name(
+                self.app_id
+                    .as_ref()
+                    // We weren't able to find an icon for the window, so fall back to the Gnome
+                    // missing image icon.
+                    .unwrap_or(&String::from(GTK_MISSING_IMAGE_ICON)),
+            ),
         }
     }
 }
