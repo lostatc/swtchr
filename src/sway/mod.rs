@@ -1,3 +1,4 @@
+mod icon;
 mod queue;
 mod subscribe;
 
