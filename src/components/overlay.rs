@@ -5,7 +5,7 @@ use gtk::Label;
 
 use super::app_bar::AppBar;
 use super::app_button::AppButton;
-use super::Window;
+use crate::sway::Window;
 
 glib::wrapper! {
     pub struct Overlay(ObjectSubclass<imp::Overlay>)

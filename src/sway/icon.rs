@@ -1,10 +1,8 @@
-use std::path::PathBuf;
-
-use gtk::gio::{DesktopAppInfo, FileIcon, ThemedIcon};
-use gtk::glib::object::Cast;
+use gtk::gio::{DesktopAppInfo, Icon};
 use gtk::prelude::*;
 use swayipc::Node;
 
+#[derive(Debug, Clone)]
 pub struct IconLocator {
     // Only Wayland windows have an app ID.
     app_id: Option<String>,
@@ -15,14 +13,6 @@ pub struct IconLocator {
 
     // Worse-case, we can fall back to the window title.
     window_title: Option<String>,
-}
-
-pub enum Icon {
-    // An icon in the user's GTK theme that we can load by name.
-    Theme { name: String },
-
-    // An icon located at a path in the filesystem.
-    File { path: PathBuf },
 }
 
 impl IconLocator {
@@ -54,23 +44,7 @@ impl IconLocator {
     }
 
     pub fn icon(&self) -> Option<Icon> {
-        let gio_icon = self.app_info()?.icon()?;
-
-        if let Some(themed_icon) = gio_icon.downcast_ref::<ThemedIcon>() {
-            if let &[icon_name, ..] = &themed_icon.names().as_slice() {
-                return Some(Icon::Theme {
-                    name: icon_name.to_string(),
-                });
-            }
-        }
-
-        if let Some(file_icon) = gio_icon.downcast_ref::<FileIcon>() {
-            if let Some(path) = file_icon.file().path() {
-                return Some(Icon::File { path });
-            }
-        }
-
-        None
+        self.app_info()?.icon()
     }
 }
 

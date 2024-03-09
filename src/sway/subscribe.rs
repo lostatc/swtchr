@@ -6,6 +6,7 @@ use eyre::{bail, eyre, WrapErr};
 use swayipc::{self, Connection, Event, EventType, WindowChange};
 
 use super::queue::WindowQueue;
+use super::IconLocator;
 
 fn filter_event(
     event_result: swayipc::Fallible<Event>,
@@ -30,10 +31,9 @@ fn filter_event(
                 return Ok(None);
             }
 
-            match Window::from_node(window_event.container) {
-                Some(sway_window) => Ok(Some(WindowEvent::Focus(sway_window))),
-                None => Ok(None),
-            }
+            Ok(Some(WindowEvent::Focus(Window::from(
+                window_event.container,
+            ))))
         }
         WindowChange::Close => Ok(Some(WindowEvent::Close(window_event.container.id))),
         _ => Ok(None),
@@ -124,21 +124,16 @@ pub enum WindowEvent {
 #[derive(Debug, Clone)]
 pub struct Window {
     pub id: SwayNodeId,
-    pub window_title: String,
-    pub app_id: String,
+    pub title: String,
+    pub icon_locator: IconLocator,
 }
 
-impl Window {
-    // Returns `None` if the node is not a view.
-    fn from_node(node: swayipc::Node) -> Option<Self> {
-        if let (Some(name), Some(app_id)) = (node.name, node.app_id) {
-            Some(Self {
-                id: node.id,
-                window_title: name,
-                app_id,
-            })
-        } else {
-            None
+impl From<swayipc::Node> for Window {
+    fn from(node: swayipc::Node) -> Self {
+        Self {
+            id: node.id,
+            title: node.name.as_ref().cloned().unwrap_or_else(String::new),
+            icon_locator: node.into(),
         }
     }
 }

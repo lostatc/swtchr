@@ -4,7 +4,7 @@ mod sway;
 
 use std::rc::Rc;
 
-use components::{Overlay, Window};
+use components::Overlay;
 use eyre::{bail, WrapErr};
 use gtk::gdk::Display;
 use gtk::gio::{self, ActionEntry};
@@ -101,15 +101,7 @@ fn build_window(config: &Config, app: &Application, subscription: Rc<WindowSubsc
 
     // Update the list of windows in the window switcher right before we display it.
     let on_display = Box::new(move || {
-        let windows = subscription
-            .get_window_list()
-            // TODO: How can we propagate this error rather than panicking?
-            .unwrap()
-            .into_iter()
-            .map(Window::from)
-            .collect::<Vec<_>>();
-
-        overlay.update_windows(&windows);
+        overlay.update_windows(&subscription.get_window_list().unwrap());
     });
 
     register_actions(&window, on_display);

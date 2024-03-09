@@ -3,7 +3,7 @@ use gtk::glib;
 use gtk::prelude::*;
 use gtk::Image;
 
-use super::model::Window;
+use crate::sway::Window;
 
 glib::wrapper! {
     pub struct AppButton(ObjectSubclass<imp::AppButton>)
@@ -13,15 +13,18 @@ glib::wrapper! {
 
 impl AppButton {
     pub fn new(window: &Window) -> Self {
-        let image = Image::builder()
-            .icon_name(&window.icon_name)
-            .pixel_size(80)
-            .build();
+        let image_builder = match window.icon_locator.icon() {
+            Some(icon) => Image::builder().gicon(&icon),
+            // TODO: Show some sort of fallback/placeholder if we were not able to find an icon.
+            None => Image::builder().icon_name(""),
+        };
+
+        let image = image_builder.pixel_size(80).build();
 
         Object::builder()
             .property("css-classes", ["app-icon"].to_value())
             .property("child", image)
-            .property("window-id", window.id.clone())
+            .property("window-id", window.id)
             .property("window-title", window.title.clone())
             .build()
     }
