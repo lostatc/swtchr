@@ -102,6 +102,7 @@ fn build_window(config: &Config, app: &Application, subscription: Rc<WindowSubsc
     let on_display = Box::new(move || {
         let windows = subscription
             .get_window_list()
+            // TODO: How can we propagate this error rather than panicking?
             .unwrap()
             .into_iter()
             .map(Window::from)
