@@ -49,10 +49,13 @@ fn wait_for_display_signal(window: &ApplicationWindow) {
     }));
 }
 
-fn register_actions(window: &ApplicationWindow) {
+type DisplayCallback = Box<dyn Fn()>;
+
+fn register_actions(app_window: &ApplicationWindow, on_display: DisplayCallback) {
     // Make the window visible and capture keyboard events.
     let display = ActionEntry::builder("display")
-        .activate(|window: &ApplicationWindow, _, _| {
+        .activate(move |window: &ApplicationWindow, _, _| {
+            on_display();
             window.set_keyboard_mode(KeyboardMode::Exclusive);
             window.set_visible(true);
         })
@@ -78,10 +81,10 @@ fn register_actions(window: &ApplicationWindow) {
         })
         .build();
 
-    window.add_action_entries([display, hide, focus_next, focus_prev]);
+    app_window.add_action_entries([display, hide, focus_next, focus_prev]);
 }
 
-fn build_window(config: &Config, windows: &[Window], app: &Application) {
+fn build_window(config: &Config, app: &Application, subscription: WindowSubscription) {
     let window = ApplicationWindow::builder()
         .application(app)
         .title(WINDOW_TITLE)
@@ -94,13 +97,26 @@ fn build_window(config: &Config, windows: &[Window], app: &Application) {
     window.set_layer(Layer::Overlay);
     window.set_keyboard_mode(KeyboardMode::None);
 
-    register_actions(&window);
+    let overlay = Overlay::new();
+    window.set_child(Some(&overlay));
+
+    let on_display = Box::new(move || {
+        let windows = subscription
+            .get_window_list()
+            .unwrap()
+            .into_iter()
+            .map(Window::from)
+            .collect::<Vec<_>>();
+
+        overlay.update_windows(&windows);
+    });
+
+    register_actions(&window, on_display);
 
     // Wait for the signal to display (un-hide) the overlay.
     wait_for_display_signal(&window);
 
     // The window is initially hidden until it receives the signal to display itself.
-    window.set_child(Some(&Overlay::new(windows)));
     window.present();
     window.set_visible(false);
 }
@@ -137,20 +153,12 @@ fn main() -> eyre::Result<()> {
 
     thread::sleep(Duration::from_secs(5));
 
-    let windows = subscription
-        .get_window_list()?
-        .into_iter()
-        .map(Window::from)
-        .collect::<Vec<_>>();
-
     let app = Application::builder().application_id(APP_ID).build();
 
     register_keybinds(&config, &app);
 
     app.connect_startup(|_| load_css());
-    app.connect_activate(
-        clone!(@strong windows => move |app| build_window(&config, &windows, app)),
-    );
+    app.connect_activate(move |app| build_window(&config, app, subscription));
 
     let exit_code = app.run();
 
