@@ -62,7 +62,7 @@ mod defaults {
     }
 
     pub fn select_on_release_key() -> String {
-        String::from("<Super>Super_L")
+        String::from("Super_L")
     }
 
     pub fn next_window_key() -> String {

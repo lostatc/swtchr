@@ -93,24 +93,27 @@ fn register_actions(app_window: &ApplicationWindow, on_display: DisplayCallback)
 
 fn register_controllers(config: &Config, window: &ApplicationWindow) -> eyre::Result<()> {
     if config.switch_on_release {
-        let (expected_key, expected_modifier) =
-            match gtk::accelerator_parse(&config.keymap.select_on_release) {
-                Some(pair) => pair,
-                None => bail!("could not parse keybind"),
-            };
+        let (expected_key, _) = match gtk::accelerator_parse(&config.keymap.select_on_release) {
+            Some(pair) => pair,
+            None => bail!("could not parse keybind"),
+        };
 
         let controller = EventControllerKey::new();
 
-        controller.connect_key_released(
-            clone!(@weak window => move |_, actual_key, _, actual_modifier| {
-                if actual_key == expected_key && actual_modifier == expected_modifier {
-                    gtk::prelude::WidgetExt::activate_action(&window, "win.select", None)
-                        .expect("failed to activate action to select window on key release");
-                    gtk::prelude::WidgetExt::activate_action(&window, "win.hide", None)
-                        .expect("failed to activate action to hide switcher on key release");
-                }
-            }),
-        );
+        controller.connect_key_released(clone!(@weak window => move |_, actual_key, _, _| {
+            // We only care about the key that was released, not any modifiers.
+            //
+            // Imagine of you had this set to listen for `<Super>Super_L`. That would work when
+            // tabbing forward via `<Super>Tab`, but not when tabbing backward via
+            // `<Super><Shift>Tab`. In the latter case, releasing the Super key before releasing
+            // the Shift key would keep the window switcher open, which is not what we want.
+            if actual_key == expected_key {
+                gtk::prelude::WidgetExt::activate_action(&window, "win.select", None)
+                    .expect("failed to activate action to select window on key release");
+                gtk::prelude::WidgetExt::activate_action(&window, "win.hide", None)
+                    .expect("failed to activate action to hide switcher on key release");
+            }
+        }));
 
         window.add_controller(controller);
     }
