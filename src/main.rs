@@ -45,7 +45,11 @@ fn wait_for_display_signal(window: &ApplicationWindow) {
 
     glib::spawn_future_local(clone!(@weak window => async move {
         while let Ok(()) = receiver.recv().await {
-            WidgetExt::activate_action(&window, "win.display", None).unwrap();
+            if window.get_visible() {
+                WidgetExt::activate_action(&window, "win.focus-next", None).unwrap();
+            } else {
+                WidgetExt::activate_action(&window, "win.display", None).unwrap();
+            }
         }
     }));
 }
