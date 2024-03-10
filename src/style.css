@@ -17,6 +17,18 @@ window {
 }
 
 .app-icon:focus {
+  /*
+   * Adapted from the default Adwaita style sheet to mimic the focus ring that
+   * elements get when they're focused with the keyboard.
+   *
+   * https://gitlab.gnome.org/GNOME/gtk/-/blob/main/gtk/theme/Default/_drawing.scss
+   */
+  transition-property: outline, outline-width, outline-offset, outline-color;
+  transition-duration: 300ms;
+  animation-timing-function: ease-in-out;
+  outline-width: 2px;
+  outline-offset: -2px;
+
   outline-color: #cdd6f490; /* Catppuccin Mocha Text */
   background-color: #cdd6f414; /* Catppuccin Mocha Text */
 }
