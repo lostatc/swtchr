@@ -56,9 +56,13 @@ fn register_actions(app_window: &ApplicationWindow, on_display: DisplayCallback)
     // Make the window visible and capture keyboard events.
     let display = ActionEntry::builder("display")
         .activate(move |window: &ApplicationWindow, _, _| {
-            on_display();
-            window.set_keyboard_mode(KeyboardMode::Exclusive);
-            window.set_visible(true);
+            // Check if the window is already visible first so we don't needlessly repopulate the
+            // window list every time the user mashes the key.
+            if !window.get_visible() {
+                on_display();
+                window.set_keyboard_mode(KeyboardMode::Exclusive);
+                window.set_visible(true);
+            }
         })
         .build();
 
