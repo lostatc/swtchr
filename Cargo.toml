@@ -13,6 +13,10 @@ serde = { version = "1.0.197", features = ["derive"] }
 signal-hook = "0.3.17"
 swayipc = "3.0.2"
 
+[[bin]]
+name = "swtchrd"
+path = "./src/daemon/main.rs"
+
 [lints.rust]
 unsafe_code = "forbid"
 missing_debug_implementations = "warn"
