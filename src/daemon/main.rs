@@ -7,15 +7,13 @@ use std::rc::Rc;
 
 use eyre::{bail, WrapErr};
 use gtk::gdk::{Display, Key, ModifierType};
-use gtk::gio::{self, ActionEntry};
+use gtk::gio::ActionEntry;
 use gtk::glib::{self, clone};
 use gtk::prelude::*;
 use gtk::{
     Application, ApplicationWindow, CssProvider, DirectionType, EventControllerKey, Settings,
 };
 use gtk4_layer_shell::{KeyboardMode, Layer, LayerShell};
-use signal_hook::consts::signal::SIGUSR1;
-use signal_hook::iterator::Signals;
 
 use components::Overlay;
 use config::Config;
@@ -30,25 +28,6 @@ fn set_settings(config: &Config) {
 
     settings.set_gtk_icon_theme_name(config.icon_theme.as_deref());
     settings.set_gtk_font_name(config.font.as_deref());
-}
-
-fn wait_for_display_signal(window: &ApplicationWindow) {
-    let (sender, receiver) = async_channel::bounded(1);
-    let mut signals = Signals::new([SIGUSR1]).unwrap();
-
-    gio::spawn_blocking(move || {
-        for _ in &mut signals {
-            sender
-                .send_blocking(())
-                .expect("Channel for processing unix signals is not open.");
-        }
-    });
-
-    glib::spawn_future_local(clone!(@weak window => async move {
-        while let Ok(()) = receiver.recv().await {
-            WidgetExt::activate_action(&window, "win.display", None).unwrap();
-        }
-    }));
 }
 
 type DisplayCallback = Box<dyn Fn()>;
@@ -68,7 +47,7 @@ fn register_actions(app_window: &ApplicationWindow, on_display: DisplayCallback)
         .build();
 
     // Hide the window and release control of the keyboard.
-    let dismiss = ActionEntry::builder("dismiss")
+    let dismiss = ActionEntry::builder("hide")
         .activate(|window: &ApplicationWindow, _, _| {
             window.set_keyboard_mode(KeyboardMode::None);
             window.set_visible(false);
@@ -87,7 +66,7 @@ fn register_actions(app_window: &ApplicationWindow, on_display: DisplayCallback)
         })
         .build();
 
-    let select = ActionEntry::builder("select")
+    let select = ActionEntry::builder("switch")
         .activate(|window: &ApplicationWindow, _, _| {
             window.activate_default();
         })
@@ -96,15 +75,12 @@ fn register_actions(app_window: &ApplicationWindow, on_display: DisplayCallback)
     app_window.add_action_entries([display, dismiss, focus_next, focus_prev, select]);
 }
 
-fn register_mod_release_controller(
-    config: &Config,
-    window: &ApplicationWindow,
-) -> eyre::Result<()> {
+fn register_mod_release_controller(config: &Config, window: &ApplicationWindow) {
     let dismiss_on_release = config.dismiss_on_release;
     let select_on_release = config.select_on_release;
 
     if !dismiss_on_release && !select_on_release {
-        return Ok(());
+        return;
     }
 
     let controller = EventControllerKey::new();
@@ -144,18 +120,45 @@ fn register_mod_release_controller(
             || is_meta_released {
 
             if select_on_release {
-                gtk::prelude::WidgetExt::activate_action(&window, "win.select", None)
+                WidgetExt::activate_action(&window, "win.switch", None)
                     .expect("failed to activate action to select window on key release");
             }
 
             if dismiss_on_release {
-                gtk::prelude::WidgetExt::activate_action(&window, "win.dismiss", None)
+                WidgetExt::activate_action(&window, "win.hide", None)
                     .expect("failed to activate action to dismiss switcher on key release");
             }
         }
     }));
 
     window.add_controller(controller);
+}
+
+fn register_ipc_command_handlers(window: &ApplicationWindow) -> eyre::Result<()> {
+    let receiver = ipc::subscribe()?;
+
+    glib::spawn_future_local(clone!(@weak window => async move {
+        let dispatch_actions = |actions: &[&str]| -> eyre::Result<()> {
+            actions.iter().try_for_each(|action| {
+                WidgetExt::activate_action(&window, action, None).map_err(eyre::Report::from)
+            })
+        };
+
+        while let Ok(msg) = receiver.recv().await {
+            use swtchr::Command::*;
+
+            match msg.expect("error receiving IPC command") {
+                Next => dispatch_actions(&["win.display", "win.focus-next"]),
+                Prev => dispatch_actions(&["win.display", "win.focus-prev"]),
+                PeekNext => dispatch_actions(&["win.display", "win.focus-next", "win.switch"]),
+                PeekPrev => dispatch_actions(&["win.display", "win.focus-prev", "win.switch"]),
+                Show => dispatch_actions(&["win.display"]),
+                Dismiss => dispatch_actions(&["win.hide"]),
+                Peek => dispatch_actions(&["win.switch"]),
+                Select => dispatch_actions(&["win.switch", "win.hide"]),
+            }.expect("error dispatching IPC command")
+        }
+    }));
 
     Ok(())
 }
@@ -182,10 +185,8 @@ fn build_window(config: &Config, app: &Application, subscription: Rc<WindowSubsc
     });
 
     register_actions(&window, on_display);
-    register_mod_release_controller(config, &window).unwrap();
-
-    // Wait for the signal to display (un-hide) the overlay.
-    wait_for_display_signal(&window);
+    register_mod_release_controller(config, &window);
+    register_ipc_command_handlers(&window).expect("failed subscribing to IPC events");
 
     // The window is initially hidden until it receives the signal to display itself.
     window.present();
@@ -203,20 +204,6 @@ fn load_css() {
     );
 }
 
-fn register_keybinds(config: &Config, app: &Application) {
-    // Hide the overlay.
-    app.set_accels_for_action("win.dismiss", &[&config.keymap.dismiss]);
-
-    // Focus the next app in the switcher.
-    app.set_accels_for_action("win.focus-next", &[&config.keymap.next_window]);
-
-    // Focus the previous app in the switcher.
-    app.set_accels_for_action("win.focus-prev", &[&config.keymap.prev_window]);
-
-    // Switch to the currently selected window.
-    app.set_accels_for_action("win.select", &[&config.keymap.select]);
-}
-
 fn main() -> eyre::Result<()> {
     color_eyre::install()?;
 
@@ -228,8 +215,6 @@ fn main() -> eyre::Result<()> {
     );
 
     let app = Application::builder().application_id(APP_ID).build();
-
-    register_keybinds(&config, &app);
 
     app.connect_startup(|_| load_css());
     app.connect_activate(move |app| build_window(&config, app, Rc::clone(&subscription)));
