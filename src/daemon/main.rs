@@ -1,5 +1,6 @@
 mod components;
 mod config;
+mod ipc;
 mod sway;
 
 use std::rc::Rc;

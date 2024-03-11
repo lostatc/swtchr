@@ -9,6 +9,7 @@ color-eyre = "0.6.2"
 eyre = "0.6.12"
 gtk = { version = "0.7.3", package = "gtk4", features = ["v4_12"] }
 gtk4-layer-shell = "0.2.0"
+nix = { version = "0.28.0", features = ["user"] }
 serde = { version = "1.0.197", features = ["derive"] }
 signal-hook = "0.3.17"
 swayipc = "3.0.2"
@@ -16,6 +17,10 @@ swayipc = "3.0.2"
 [[bin]]
 name = "swtchrd"
 path = "./src/daemon/main.rs"
+
+[[bin]]
+name = "swtchr"
+path = "./src/client/main.rs"
 
 [lints.rust]
 unsafe_code = "forbid"
