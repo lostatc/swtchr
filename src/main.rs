@@ -5,7 +5,7 @@ mod sway;
 use std::rc::Rc;
 
 use eyre::{bail, WrapErr};
-use gtk::gdk::Display;
+use gtk::gdk::{Display, Key, ModifierType};
 use gtk::gio::{self, ActionEntry};
 use gtk::glib::{self, clone};
 use gtk::prelude::*;
@@ -67,7 +67,7 @@ fn register_actions(app_window: &ApplicationWindow, on_display: DisplayCallback)
         .build();
 
     // Hide the window and release control of the keyboard.
-    let hide = ActionEntry::builder("hide")
+    let dismiss = ActionEntry::builder("dismiss")
         .activate(|window: &ApplicationWindow, _, _| {
             window.set_keyboard_mode(KeyboardMode::None);
             window.set_visible(false);
@@ -92,35 +92,69 @@ fn register_actions(app_window: &ApplicationWindow, on_display: DisplayCallback)
         })
         .build();
 
-    app_window.add_action_entries([display, hide, focus_next, focus_prev, select]);
+    app_window.add_action_entries([display, dismiss, focus_next, focus_prev, select]);
 }
 
-fn register_controllers(config: &Config, window: &ApplicationWindow) -> eyre::Result<()> {
-    if config.switch_on_release {
-        let (expected_key, _) = match gtk::accelerator_parse(&config.keymap.select_on_release) {
-            Some(pair) => pair,
-            None => bail!("could not parse keybind"),
-        };
+fn register_mod_release_controller(
+    config: &Config,
+    window: &ApplicationWindow,
+) -> eyre::Result<()> {
+    let dismiss_on_release = config.dismiss_on_release;
+    let select_on_release = config.select_on_release;
 
-        let controller = EventControllerKey::new();
+    if !dismiss_on_release && !select_on_release {
+        return Ok(());
+    }
 
-        controller.connect_key_released(clone!(@weak window => move |_, actual_key, _, _| {
-            // We only care about the key that was released, not any modifiers.
-            //
-            // Imagine of you had this set to listen for `<Super>Super_L`. That would work when
-            // tabbing forward via `<Super>Tab`, but not when tabbing backward via
-            // `<Super><Shift>Tab`. In the latter case, releasing the Super key before releasing
-            // the Shift key would keep the window switcher open, which is not what we want.
-            if actual_key == expected_key {
+    let controller = EventControllerKey::new();
+
+    controller.connect_key_released(clone!(@weak window => move |_, key, _, modifiers| {
+        // Most keybindings are handled in the user's Sway config, calling the `swtchr` binary
+        // that sends the appropriate message to the daemon over its IPC socket.
+        //
+        // However, we need to handle key release events in the daemon, because the way Sway
+        // handles `bindsym --release` bindings wouldn't work for our use-case:
+        //
+        // https://github.com/swaywm/sway/pull/6920
+        //
+        // To simplify the config, rather than make the user specify which key release should
+        // select a window and/or dismiss the overlay, we do so when both of these are true:
+        //
+        // 1. The user releases one of the modifier keys below.
+        // 2. That modifier was the only modifier key being held.
+        //
+        // Why do we only perform this action when the *last* modifier is released? Imagine the
+        // user is tabbing through windows via `<Super>Tab` and `<Super><Shift>Tab`. Releasing
+        // `<Shift>` to switch from paging backwards to paging forwards shouldn't dismiss the
+        // overlay until `<Super>` is also released.
+
+        let is_super_released = modifiers == ModifierType::SUPER_MASK && (key == Key::Super_L || key == Key::Super_R);
+        let is_shift_released = modifiers == ModifierType::SHIFT_MASK && (key == Key::Shift_L || key == Key::Shift_R);
+        let is_ctrl_released = modifiers == ModifierType::CONTROL_MASK && (key == Key::Control_L || key == Key::Control_R);
+        let is_alt_released = modifiers == ModifierType::ALT_MASK && (key == Key::Alt_L || key == Key::Alt_R);
+        let is_hyper_released = modifiers == ModifierType::HYPER_MASK && (key == Key::Hyper_L || key == Key::Hyper_R);
+        let is_meta_released = modifiers == ModifierType::META_MASK && (key == Key::Meta_L || key == Key::Meta_R);
+
+        if is_super_released
+            || is_shift_released
+            || is_ctrl_released
+            || is_alt_released
+            || is_hyper_released
+            || is_meta_released {
+
+            if select_on_release {
                 gtk::prelude::WidgetExt::activate_action(&window, "win.select", None)
                     .expect("failed to activate action to select window on key release");
-                gtk::prelude::WidgetExt::activate_action(&window, "win.hide", None)
-                    .expect("failed to activate action to hide switcher on key release");
             }
-        }));
 
-        window.add_controller(controller);
-    }
+            if dismiss_on_release {
+                gtk::prelude::WidgetExt::activate_action(&window, "win.dismiss", None)
+                    .expect("failed to activate action to dismiss switcher on key release");
+            }
+        }
+    }));
+
+    window.add_controller(controller);
 
     Ok(())
 }
@@ -147,7 +181,7 @@ fn build_window(config: &Config, app: &Application, subscription: Rc<WindowSubsc
     });
 
     register_actions(&window, on_display);
-    register_controllers(config, &window).unwrap();
+    register_mod_release_controller(config, &window).unwrap();
 
     // Wait for the signal to display (un-hide) the overlay.
     wait_for_display_signal(&window);
@@ -170,7 +204,7 @@ fn load_css() {
 
 fn register_keybinds(config: &Config, app: &Application) {
     // Hide the overlay.
-    app.set_accels_for_action("win.hide", &[&config.keymap.dismiss]);
+    app.set_accels_for_action("win.dismiss", &[&config.keymap.dismiss]);
 
     // Focus the next app in the switcher.
     app.set_accels_for_action("win.focus-next", &[&config.keymap.next_window]);
