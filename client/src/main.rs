@@ -2,7 +2,7 @@ use std::env;
 use std::os::unix::net::UnixDatagram;
 use std::str::FromStr;
 
-use swtchr::{sock_path, Command};
+use swtchr_common::{sock_path, Command};
 
 fn main() -> eyre::Result<()> {
     let socket = UnixDatagram::unbound()?;

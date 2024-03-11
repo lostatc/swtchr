@@ -6,7 +6,7 @@ use std::thread;
 
 use eyre::WrapErr;
 
-use swtchr::{sock_path, Command};
+use swtchr_common::{sock_path, Command};
 
 pub fn subscribe() -> eyre::Result<async_channel::Receiver<eyre::Result<Command>>> {
     let (sender, receiver) = async_channel::unbounded::<eyre::Result<Command>>();

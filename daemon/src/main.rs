@@ -145,7 +145,7 @@ fn register_ipc_command_handlers(window: &ApplicationWindow) -> eyre::Result<()>
         };
 
         while let Ok(msg) = receiver.recv().await {
-            use swtchr::Command::*;
+            use swtchr_common::Command::*;
 
             match msg.expect("error receiving IPC command") {
                 Next => dispatch_actions(&["win.display", "win.focus-next"]),

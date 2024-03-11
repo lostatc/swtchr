@@ -1,0 +1,16 @@
+[package]
+name = "swtchr-client"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+swtchr-common = { path = "../common" }
+eyre = "0.6.12"
+
+[[bin]]
+name = "swtchr"
+path = "./src/main.rs"
+
+[lints.rust]
+unsafe_code = "forbid"
+missing_debug_implementations = "warn"

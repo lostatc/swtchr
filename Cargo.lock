@@ -918,7 +918,23 @@ dependencies = [
 ]
 
 [[package]]
-name = "swtchr"
+name = "swtchr-client"
+version = "0.1.0"
+dependencies = [
+ "eyre",
+ "swtchr-common",
+]
+
+[[package]]
+name = "swtchr-common"
+version = "0.1.0"
+dependencies = [
+ "eyre",
+ "nix",
+]
+
+[[package]]
+name = "swtchr-daemon"
 version = "0.1.0"
 dependencies = [
  "async-channel",
@@ -926,9 +942,9 @@ dependencies = [
  "eyre",
  "gtk4",
  "gtk4-layer-shell",
- "nix",
  "serde",
  "swayipc",
+ "swtchr-common",
 ]
 
 [[package]]

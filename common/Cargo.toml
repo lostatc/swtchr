@@ -1,0 +1,12 @@
+[package]
+name = "swtchr-common"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+eyre = "0.6.12"
+nix = { version = "0.28.0", features = ["user"] }
+
+[lints.rust]
+unsafe_code = "forbid"
+missing_debug_implementations = "warn"
