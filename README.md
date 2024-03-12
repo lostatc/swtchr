@@ -25,18 +25,17 @@ cd ./swtchr
 direnv allow
 ```
 
-If you would rather install the necessary dependencies using a different
-package manager:
+If you would rather install the necessary dependencies yourself:
 
 - [GTK 4](https://gtk-rs.org/gtk4-rs/stable/latest/book/installation_linux.html)
 - [gtk4-layer-shell](https://github.com/wmww/gtk4-layer-shell?tab=readme-ov-file#distro-packages)
 - [librsvg](https://gitlab.gnome.org/GNOME/librsvg)
 
-To build the app, [install Rust](https://www.rust-lang.org/tools/install) and
-run:
+To build the `swtchrd` daemon and `swtchr` client, [install
+Rust](https://www.rust-lang.org/tools/install) and run:
 
 ```shell
-cargo build --release
+cargo build --workspace --release
 ```
 
 You can find the generated binaries here:
