@@ -18,6 +18,12 @@ impl AppBar {
             obj.append(button);
         }
 
+        // Initially focus the previous window instead of the current app so that the first call to
+        // `swtchr next` switches to the previous window.
+        if let Some(prev_app) = app_buttons.get(1) {
+            obj.set_focus_child(Some(prev_app));
+        }
+
         for app_button in app_buttons.iter() {
             app_button.connect_has_focus_notify(clone!(@weak obj => move |button| {
                 obj.set_current_title(button.window_title());
