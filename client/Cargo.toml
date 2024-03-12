@@ -7,6 +7,7 @@ edition = "2021"
 swtchr-common = { path = "../common" }
 eyre = "0.6.12"
 clap = { version = "4.5.2", features = ["derive"] }
+color-eyre = "0.6.2"
 
 [[bin]]
 name = "swtchr"
