@@ -1,15 +1,18 @@
-use std::env;
-use std::os::unix::net::UnixDatagram;
-use std::str::FromStr;
+mod cli;
 
-use swtchr_common::{sock_path, Command};
+use std::os::unix::net::UnixDatagram;
+
+use clap::Parser;
+use cli::Cli;
+use swtchr_common::sock_path;
 
 fn main() -> eyre::Result<()> {
+    let args = Cli::parse();
+
     let socket = UnixDatagram::unbound()?;
     socket.connect(sock_path()?)?;
 
-    let msg = Command::from_str(&env::args().nth(1).unwrap())?;
-    socket.send(msg.msg().as_bytes())?;
+    socket.send(args.command.command().msg().as_bytes())?;
 
     Ok(())
 }

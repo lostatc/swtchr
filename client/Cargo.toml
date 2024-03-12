@@ -6,6 +6,7 @@ edition = "2021"
 [dependencies]
 swtchr-common = { path = "../common" }
 eyre = "0.6.12"
+clap = { version = "4.5.2", features = ["derive"] }
 
 [[bin]]
 name = "swtchr"
