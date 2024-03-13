@@ -21,7 +21,7 @@ pub fn subscribe() -> eyre::Result<async_channel::Receiver<eyre::Result<Command>
     let socket = UnixDatagram::bind(&socket_path).wrap_err("error binding IPC socket")?;
 
     thread::spawn(move || {
-        let mut buf = vec![0u8; 64];
+        let mut buf = vec![0u8; Command::BUF_LEN];
 
         loop {
             let send_result = match socket.recv(&mut buf) {

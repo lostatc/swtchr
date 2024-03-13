@@ -28,6 +28,8 @@ pub enum Command {
 }
 
 impl Command {
+    pub const BUF_LEN: usize = 16;
+
     pub fn msg(&self) -> &[u8] {
         use Command::*;
 
