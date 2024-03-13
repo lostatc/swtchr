@@ -17,7 +17,7 @@ use gtk4_layer_shell::{KeyboardMode, Layer, LayerShell};
 
 use components::Overlay;
 use config::Config;
-use sway::WindowSubscription;
+use sway::{SwayMode, WindowSubscription};
 
 const APP_ID: &str = "io.github.lostatc.swtchr";
 const WINDOW_TITLE: &str = "swtchr";
@@ -33,8 +33,8 @@ fn set_settings(config: &Config) {
 type DisplayCallback = Box<dyn Fn()>;
 
 fn register_actions(app_window: &ApplicationWindow, on_display: DisplayCallback) {
-    // Make the window visible and capture keyboard events.
-    let display = ActionEntry::builder("display")
+    // Make the overlay visible and capture keyboard events.
+    let show = ActionEntry::builder("show")
         .activate(move |window: &ApplicationWindow, _, _| {
             // Check if the window is already visible first so we don't needlessly repopulate the
             // window list every time the user mashes the key.
@@ -42,37 +42,78 @@ fn register_actions(app_window: &ApplicationWindow, on_display: DisplayCallback)
                 on_display();
                 window.set_keyboard_mode(KeyboardMode::Exclusive);
                 window.set_visible(true);
+
+                // Switch Sway into a special keybind mode to cancel any compositor keybinds that
+                // may conflict with swtchr keybinds. This also gives the user the opportunity to
+                // define their own Sway keybinds specific to when the swtchr overlay is open.
+                sway::switch_mode(SwayMode::Swtchr)
+                    .expect("failed switching Sway to the `swtchr` keybind mode");
             }
         })
         .build();
 
-    // Hide the window and release control of the keyboard.
-    let dismiss = ActionEntry::builder("hide")
+    // Hide the overlay and release control of the keyboard.
+    let dismiss = ActionEntry::builder("dismiss")
         .activate(|window: &ApplicationWindow, _, _| {
             window.set_keyboard_mode(KeyboardMode::None);
             window.set_visible(false);
+
+            // Switch Sway back to the default keybind mode, releasing exclusive control over the
+            // keybinds.
+            sway::switch_mode(SwayMode::Default)
+                .expect("failed switching Sway back to default keybind mode");
         })
         .build();
 
-    let focus_next = ActionEntry::builder("focus-next")
+    // Switch to the selected window and hide the overlay.
+    let select = ActionEntry::builder("select")
         .activate(|window: &ApplicationWindow, _, _| {
-            window.child_focus(DirectionType::TabForward);
+            window.activate_default();
+            WidgetExt::activate_action(window, "win.dismiss", None)
+                .expect("failed to activate action to dismiss window");
         })
         .build();
 
-    let focus_prev = ActionEntry::builder("focus-prev")
-        .activate(|window: &ApplicationWindow, _, _| {
-            window.child_focus(DirectionType::TabBackward);
-        })
-        .build();
-
-    let select = ActionEntry::builder("switch")
+    // Switch to the selected window without hiding the overlay.
+    let peek = ActionEntry::builder("peek")
         .activate(|window: &ApplicationWindow, _, _| {
             window.activate_default();
         })
         .build();
 
-    app_window.add_action_entries([display, dismiss, focus_next, focus_prev, select]);
+    // Select the next window in the list.
+    let next = ActionEntry::builder("next")
+        .activate(|window: &ApplicationWindow, _, _| {
+            window.child_focus(DirectionType::TabForward);
+        })
+        .build();
+
+    // Select the previous window in the list.
+    let prev = ActionEntry::builder("prev")
+        .activate(|window: &ApplicationWindow, _, _| {
+            window.child_focus(DirectionType::TabBackward);
+        })
+        .build();
+
+    // Select the next window in the list and switch to it without hiding the overlay.
+    let peek_next = ActionEntry::builder("peek-next")
+        .activate(|window: &ApplicationWindow, _, _| {
+            window.child_focus(DirectionType::TabForward);
+            window.activate_default();
+        })
+        .build();
+
+    // Select the previous window in the list and switch to it without hiding the overlay.
+    let peek_prev = ActionEntry::builder("peek-prev")
+        .activate(|window: &ApplicationWindow, _, _| {
+            window.child_focus(DirectionType::TabBackward);
+            window.activate_default();
+        })
+        .build();
+
+    app_window.add_action_entries([
+        show, dismiss, select, peek, next, prev, peek_next, peek_prev,
+    ]);
 }
 
 fn register_mod_release_controller(config: &Config, window: &ApplicationWindow) {
@@ -120,12 +161,12 @@ fn register_mod_release_controller(config: &Config, window: &ApplicationWindow) 
             || is_meta_released {
 
             if select_on_release {
-                WidgetExt::activate_action(&window, "win.switch", None)
+                WidgetExt::activate_action(&window, "win.select", None)
                     .expect("failed to activate action to select window on key release");
             }
 
             if dismiss_on_release {
-                WidgetExt::activate_action(&window, "win.hide", None)
+                WidgetExt::activate_action(&window, "win.dismiss", None)
                     .expect("failed to activate action to dismiss switcher on key release");
             }
         }
@@ -138,29 +179,46 @@ fn register_ipc_command_handlers(window: &ApplicationWindow) -> eyre::Result<()>
     let receiver = ipc::subscribe()?;
 
     glib::spawn_future_local(clone!(@weak window => async move {
-        let dispatch_actions = |actions: &[&str]| -> eyre::Result<()> {
-            actions.iter().try_for_each(|action| {
-                WidgetExt::activate_action(&window, action, None).map_err(eyre::Report::from)
-            })
-        };
-
         while let Ok(msg) = receiver.recv().await {
             use swtchr_common::Command::*;
 
             match msg.expect("error receiving IPC command") {
-                Next => dispatch_actions(&["win.display", "win.focus-next"]),
-                Prev => dispatch_actions(&["win.display", "win.focus-prev"]),
-                PeekNext => dispatch_actions(&["win.display", "win.focus-next", "win.switch"]),
-                PeekPrev => dispatch_actions(&["win.display", "win.focus-prev", "win.switch"]),
-                Show => dispatch_actions(&["win.display"]),
-                Dismiss => dispatch_actions(&["win.hide"]),
-                Peek => dispatch_actions(&["win.switch"]),
-                Select => dispatch_actions(&["win.switch", "win.hide"]),
+                Show => WidgetExt::activate_action(&window, "win.show", None).map_err(eyre::Report::from),
             }.expect("error dispatching IPC command")
         }
     }));
 
     Ok(())
+}
+
+fn register_keybinds(config: &Config, app: &Application) {
+    if let Some(key) = &config.keymap.dismiss {
+        app.set_accels_for_action("win.dismiss", &[key]);
+    }
+
+    if let Some(key) = &config.keymap.select {
+        app.set_accels_for_action("win.select", &[key]);
+    }
+
+    if let Some(key) = &config.keymap.peek {
+        app.set_accels_for_action("win.peek", &[key]);
+    }
+
+    if let Some(key) = &config.keymap.next {
+        app.set_accels_for_action("win.next", &[key]);
+    }
+
+    if let Some(key) = &config.keymap.prev {
+        app.set_accels_for_action("win.prev", &[key]);
+    }
+
+    if let Some(key) = &config.keymap.peek_next {
+        app.set_accels_for_action("win.peek_next", &[key]);
+    }
+
+    if let Some(key) = &config.keymap.peek_prev {
+        app.set_accels_for_action("win.peek_prev", &[key]);
+    }
 }
 
 fn build_window(config: &Config, app: &Application, subscription: Rc<WindowSubscription>) {
@@ -185,6 +243,7 @@ fn build_window(config: &Config, app: &Application, subscription: Rc<WindowSubsc
     });
 
     register_actions(&window, on_display);
+    register_keybinds(config, app);
     register_mod_release_controller(config, &window);
     register_ipc_command_handlers(&window).expect("failed subscribing to IPC events");
 

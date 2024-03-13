@@ -3,13 +3,19 @@ use serde::Deserialize;
 #[derive(Debug, Deserialize)]
 pub struct KeymapConfig {
     #[serde(default = "defaults::dismiss_key")]
-    pub dismiss: String,
+    pub dismiss: Option<String>,
     #[serde(default = "defaults::select_key")]
-    pub select: String,
-    #[serde(default = "defaults::next_window_key")]
-    pub next_window: String,
-    #[serde(default = "defaults::prev_window_key")]
-    pub prev_window: String,
+    pub select: Option<String>,
+    #[serde(default = "defaults::peek_key")]
+    pub peek: Option<String>,
+    #[serde(default = "defaults::next_key")]
+    pub next: Option<String>,
+    #[serde(default = "defaults::prev_key")]
+    pub prev: Option<String>,
+    #[serde(default = "defaults::peek_next_key")]
+    pub peek_next: Option<String>,
+    #[serde(default = "defaults::peek_prev_key")]
+    pub peek_prev: Option<String>,
 }
 
 #[derive(Debug, Deserialize)]
@@ -37,8 +43,11 @@ impl Config {
             keymap: KeymapConfig {
                 dismiss: defaults::dismiss_key(),
                 select: defaults::select_key(),
-                next_window: defaults::next_window_key(),
-                prev_window: defaults::prev_window_key(),
+                peek: defaults::peek_key(),
+                next: defaults::next_key(),
+                prev: defaults::prev_key(),
+                peek_next: defaults::peek_next_key(),
+                peek_prev: defaults::peek_prev_key(),
             },
         })
     }
@@ -57,19 +66,31 @@ mod defaults {
         true
     }
 
-    pub fn dismiss_key() -> String {
-        String::from("Escape")
+    pub fn dismiss_key() -> Option<String> {
+        Some(String::from("Escape"))
     }
 
-    pub fn select_key() -> String {
-        String::from("Return")
+    pub fn select_key() -> Option<String> {
+        Some(String::from("Return"))
     }
 
-    pub fn next_window_key() -> String {
-        String::from("<Super>Tab")
+    pub fn peek_key() -> Option<String> {
+        None
     }
 
-    pub fn prev_window_key() -> String {
-        String::from("<Super><Shift>Tab")
+    pub fn next_key() -> Option<String> {
+        Some(String::from("<Super>Tab"))
+    }
+
+    pub fn prev_key() -> Option<String> {
+        Some(String::from("<Super><Shift>Tab"))
+    }
+
+    pub fn peek_next_key() -> Option<String> {
+        None
+    }
+
+    pub fn peek_prev_key() -> Option<String> {
+        None
     }
 }

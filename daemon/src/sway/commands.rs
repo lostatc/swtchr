@@ -23,3 +23,31 @@ pub fn switch_window(id: SwayWindowId) -> eyre::Result<()> {
         .collect::<Result<_, _>>()
         .wrap_err("failed running Sway window switch command")
 }
+
+#[derive(Debug, Clone, Copy)]
+pub enum SwayMode {
+    Default,
+    Swtchr,
+}
+
+impl SwayMode {
+    fn name(&self) -> &'static str {
+        use SwayMode::*;
+
+        match self {
+            Default => "default",
+            Swtchr => "swtchr",
+        }
+    }
+}
+
+pub fn switch_mode(mode: SwayMode) -> eyre::Result<()> {
+    connection()
+        .lock()
+        .expect("lock is poisoned")
+        .run_command(format!("mode {}", mode.name()))
+        .wrap_err("failed running Sway mode switch command")?
+        .into_iter()
+        .collect::<Result<_, _>>()
+        .wrap_err("failed running Sway mode switch command")
+}

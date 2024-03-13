@@ -1,8 +1,8 @@
+mod commands;
 mod icon;
 mod queue;
 mod subscribe;
-mod switch;
 
+pub use commands::{switch_mode, switch_window, SwayMode};
 pub use icon::IconLocator;
 pub use subscribe::{SwayWindowId, Window, WindowSubscription};
-pub use switch::switch_window;

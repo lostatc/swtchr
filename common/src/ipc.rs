@@ -17,14 +17,7 @@ pub fn sock_path() -> eyre::Result<PathBuf> {
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum Command {
-    Next,
-    Prev,
-    PeekNext,
-    PeekPrev,
     Show,
-    Dismiss,
-    Peek,
-    Select,
 }
 
 impl Command {
@@ -34,14 +27,7 @@ impl Command {
         use Command::*;
 
         match self {
-            Next => b"next",
-            Prev => b"prev",
-            PeekNext => b"peek-next",
-            PeekPrev => b"peek-prev",
             Show => b"show",
-            Dismiss => b"dismiss",
-            Peek => b"peek",
-            Select => b"select",
         }
     }
 
@@ -49,14 +35,7 @@ impl Command {
         use Command::*;
 
         Ok(match msg {
-            b"next" => Next,
-            b"prev" => Prev,
-            b"peek-next" => PeekNext,
-            b"peek-prev" => PeekPrev,
             b"show" => Show,
-            b"dismiss" => Dismiss,
-            b"peek" => Peek,
-            b"select" => Select,
             _ => bail!("unrecognized command received over IPC socket: '{:?}'", msg),
         })
     }
