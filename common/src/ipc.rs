@@ -1,6 +1,5 @@
 use std::env;
 use std::path::PathBuf;
-use std::str::FromStr;
 
 use eyre::bail;
 
@@ -29,38 +28,34 @@ pub enum Command {
 }
 
 impl Command {
-    pub fn msg(&self) -> &'static str {
+    pub fn msg(&self) -> &[u8] {
         use Command::*;
 
         match self {
-            Next => "next",
-            Prev => "prev",
-            PeekNext => "peek-next",
-            PeekPrev => "peek-prev",
-            Show => "show",
-            Dismiss => "dismiss",
-            Peek => "peek",
-            Select => "select",
+            Next => b"next",
+            Prev => b"prev",
+            PeekNext => b"peek-next",
+            PeekPrev => b"peek-prev",
+            Show => b"show",
+            Dismiss => b"dismiss",
+            Peek => b"peek",
+            Select => b"select",
         }
     }
-}
 
-impl FromStr for Command {
-    type Err = eyre::Report;
-
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
+    pub fn from_msg(msg: &[u8]) -> eyre::Result<Self> {
         use Command::*;
 
-        Ok(match s {
-            "next" => Next,
-            "prev" => Prev,
-            "peek-next" => PeekNext,
-            "peek-prev" => PeekPrev,
-            "show" => Show,
-            "dismiss" => Dismiss,
-            "peek" => Peek,
-            "select" => Select,
-            _ => bail!("unrecognized command received over IPC socket: '{s}'"),
+        Ok(match msg {
+            b"next" => Next,
+            b"prev" => Prev,
+            b"peek-next" => PeekNext,
+            b"peek-prev" => PeekPrev,
+            b"show" => Show,
+            b"dismiss" => Dismiss,
+            b"peek" => Peek,
+            b"select" => Select,
+            _ => bail!("unrecognized command received over IPC socket: '{:?}'", msg),
         })
     }
 }

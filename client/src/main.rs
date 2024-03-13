@@ -17,7 +17,9 @@ fn main() -> eyre::Result<()> {
         .connect(sock_path()?)
         .wrap_err("Could not connect to swtchrd socket. Is the daemon running?")?;
 
-    socket.send(args.command.command().msg().as_bytes())?;
+    socket
+        .send(args.command.command().msg())
+        .wrap_err("failed sending message to the swtchrd socket")?;
 
     Ok(())
 }

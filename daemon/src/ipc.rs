@@ -1,7 +1,6 @@
 use std::fs;
 use std::io;
 use std::os::unix::net::UnixDatagram;
-use std::str::{self, FromStr};
 use std::thread;
 
 use eyre::WrapErr;
@@ -26,11 +25,7 @@ pub fn subscribe() -> eyre::Result<async_channel::Receiver<eyre::Result<Command>
 
         loop {
             let send_result = match socket.recv(&mut buf) {
-                Ok(num_bytes) => sender.send_blocking(
-                    str::from_utf8(&buf[..num_bytes])
-                        .map_err(eyre::Report::from)
-                        .and_then(Command::from_str),
-                ),
+                Ok(num_bytes) => sender.send_blocking(Command::from_msg(&buf[..num_bytes])),
                 Err(err) => sender.send_blocking(Err(err.into())),
             };
 
