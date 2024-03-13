@@ -16,6 +16,7 @@ window {
   border: none;
 }
 
+.app-icon:hover,
 .app-icon:focus {
   /*
    * Adapted from the default Adwaita style sheet to mimic the focus ring that
