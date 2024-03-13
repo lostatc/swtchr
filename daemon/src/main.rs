@@ -6,7 +6,7 @@ mod sway;
 use std::rc::Rc;
 
 use eyre::{bail, WrapErr};
-use gtk::gdk::{Display, Key, ModifierType};
+use gtk::gdk::Display;
 use gtk::gio::ActionEntry;
 use gtk::glib::{self, clone};
 use gtk::prelude::*;
@@ -120,57 +120,35 @@ fn register_mod_release_controller(config: &Config, window: &ApplicationWindow) 
     let dismiss_on_release = config.dismiss_on_release;
     let select_on_release = config.select_on_release;
 
+    let release_key = match &config.release_key {
+        Some(key) => key.clone(),
+        None => return,
+    };
+
     if !dismiss_on_release && !select_on_release {
         return;
     }
 
     let controller = EventControllerKey::new();
 
-    controller.connect_key_released(clone!(@weak window => move |_, key, _, modifiers| {
-        // Most keybindings are handled in the user's Sway config, calling the `swtchr` binary
-        // that sends the appropriate message to the daemon over its IPC socket.
-        //
-        // However, we need to handle key release events in the daemon, because the way Sway
-        // handles `bindsym --release` bindings wouldn't work for our use-case:
-        //
-        // https://github.com/swaywm/sway/pull/6920
-        //
-        // To simplify the config, rather than make the user specify which key release should
-        // select a window and/or dismiss the overlay, we do so when both of these are true:
-        //
-        // 1. The user releases one of the modifier keys below.
-        // 2. That modifier was the only modifier key being held.
-        //
-        // Why do we only perform this action when the *last* modifier is released? Imagine the
-        // user is tabbing through windows via `<Super>Tab` and `<Super><Shift>Tab`. Releasing
-        // `<Shift>` to switch from paging backwards to paging forwards shouldn't dismiss the
-        // overlay until `<Super>` is also released.
+    controller.connect_key_released(
+        clone!(@weak window => move |_, actual_key, _, actual_modifiers| {
+            let (expected_key, expected_modifiers) = gtk::accelerator_parse(&release_key)
+                .expect("invalid keybind format for `release_key`");
 
-        let is_super_released = modifiers == ModifierType::SUPER_MASK && (key == Key::Super_L || key == Key::Super_R);
-        let is_shift_released = modifiers == ModifierType::SHIFT_MASK && (key == Key::Shift_L || key == Key::Shift_R);
-        let is_ctrl_released = modifiers == ModifierType::CONTROL_MASK && (key == Key::Control_L || key == Key::Control_R);
-        let is_alt_released = modifiers == ModifierType::ALT_MASK && (key == Key::Alt_L || key == Key::Alt_R);
-        let is_hyper_released = modifiers == ModifierType::HYPER_MASK && (key == Key::Hyper_L || key == Key::Hyper_R);
-        let is_meta_released = modifiers == ModifierType::META_MASK && (key == Key::Meta_L || key == Key::Meta_R);
+            if actual_key == expected_key && actual_modifiers == expected_modifiers {
+                if select_on_release {
+                    WidgetExt::activate_action(&window, "win.select", None)
+                        .expect("failed to activate action to select window on key release");
+                }
 
-        if is_super_released
-            || is_shift_released
-            || is_ctrl_released
-            || is_alt_released
-            || is_hyper_released
-            || is_meta_released {
-
-            if select_on_release {
-                WidgetExt::activate_action(&window, "win.select", None)
-                    .expect("failed to activate action to select window on key release");
+                if dismiss_on_release {
+                    WidgetExt::activate_action(&window, "win.dismiss", None)
+                        .expect("failed to activate action to dismiss switcher on key release");
+                }
             }
-
-            if dismiss_on_release {
-                WidgetExt::activate_action(&window, "win.dismiss", None)
-                    .expect("failed to activate action to dismiss switcher on key release");
-            }
-        }
-    }));
+        }),
+    );
 
     window.add_controller(controller);
 }
