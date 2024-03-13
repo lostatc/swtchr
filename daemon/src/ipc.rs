@@ -15,7 +15,7 @@ pub fn subscribe() -> eyre::Result<async_channel::Receiver<eyre::Result<Command>
 
     match fs::remove_file(&socket_path) {
         Ok(()) => {}
-        Err(err) if err.kind() == io::ErrorKind::NotFound => todo!(),
+        Err(err) if err.kind() == io::ErrorKind::NotFound => {}
         Err(err) => Err(err).wrap_err("error unlinking IPC socket")?,
     };
 
