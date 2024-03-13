@@ -1,0 +1,81 @@
+#
+# This is an example config file for swtchr, a window switcher for the Sway
+# window manager.
+#
+# https://github.com/lostatc/swtchr
+#
+# This config file shows the same defaults that swtchr uses if it can't find a
+# config file. Commented lines represent values that are are unset by default.
+#
+
+# Override the icon theme used in the window switcher.
+# Example: Papirus
+#icon_theme = ""
+
+# Override the font family and size used in the window switcher.
+# Example: Fira Sans 13
+#font = ""
+
+# Order windows with the urgency hint before all other windows in the window
+# switcher.
+urgent_first = true
+
+# Dismiss the window switcher overlay when the `release_key` is released.
+#
+# You can use this to implement Gnome-like `<Super>Tab` behavior, where
+# releasing the Super key switches to the selected window.
+dismiss_on_release = true
+
+# Switch to the currently selected window when the `release_key` is released.
+#
+# You can use this to implement Gnome-like `<Super>Tab` behavior, where
+# releasing the Super key switches to the selected window.
+select_on_release = true
+
+# The key to activate `dismiss_on_release` and `select_on_release`.
+#
+# If you want to trigger these events on the release of a modifier key (like
+# Super), you need to format it like `<Super>Super_L`, where you're including
+# the key both as a modifier *and* as a regular key.
+#
+# See the `keymap` section below for documentation on the format of keymap
+# strings.
+release_key = "<Super>Super_L"
+
+# The keymap for the window switcher.
+#
+# The default keymap mimics the Gnome-style `<Super>Tab` behavior.
+#
+# You can find documentation on the format of these keymap strings here:
+# https://docs.gtk.org/gtk4/func.accelerator_parse.html
+#
+# Symbols and special keys have names that you use to reference them in the
+# keymap, like `Tab` or `Escape`. The C header file below contains a
+# comprehensive list of them. Just look for the string that comes after
+# `GDK_KEY_`.
+# https://gitlab.gnome.org/GNOME/gtk/-/blob/main/gdk/gdkkeysyms.h
+[keymap]
+    # Close the window switcher without switching windows.
+    dismiss = "Escape"
+
+    # Switch focus to the currently selected window and close the window
+    # switcher.
+    select = "Return"
+
+    # Switch focus to the currently selected window without closing the window
+    # switcher.
+    #peek = ""
+
+    # Select the next window in the window switcher.
+    next = "<Super>Tab"
+
+    # Select the previous window in the window switcher.
+    prev = "<Super><Shift>Tab"
+
+    # Select the next window in the window switcher and switch focus to it
+    # without closing the window switcher.
+    #peek_next = ""
+
+    # Select the previous window in the window switcher and switch focus to it
+    # without closing the window switcher.
+    #peek_prev = ""
