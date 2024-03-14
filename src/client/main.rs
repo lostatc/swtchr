@@ -5,6 +5,7 @@ use std::os::unix::net::UnixDatagram;
 use clap::Parser;
 use eyre::Context;
 use swtchr::ipc::{sock_path, Command};
+use swtchr::session::check_is_sway_session;
 use swtchr::sway;
 
 use cli::Cli;
@@ -27,6 +28,8 @@ fn main() -> eyre::Result<()> {
 
     // There are no CLI arguments we are interested in.
     Cli::parse();
+
+    check_is_sway_session()?;
 
     if let Err(err) = send_msg() {
         // We weren't able to message the swtchrd socket to open the window switcher, so it can't

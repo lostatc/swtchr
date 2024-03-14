@@ -16,6 +16,7 @@ use gtk4_layer_shell::{KeyboardMode, Layer, LayerShell};
 
 use config::Config;
 use swtchr::ipc::Command as SwtchrCommand;
+use swtchr::session::check_is_sway_session;
 use swtchr::sway::{self, SwayMode, WindowSubscription};
 
 const APP_ID: &str = "io.github.lostatc.swtchr";
@@ -233,6 +234,8 @@ fn main() -> eyre::Result<()> {
     color_eyre::install()?;
 
     let config = Config::read()?;
+
+    check_is_sway_session()?;
 
     let subscription = Rc::new(
         WindowSubscription::subscribe(config.urgent_first)

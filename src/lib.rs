@@ -7,3 +7,6 @@ pub mod ipc;
 
 #[doc(hidden)]
 pub mod sway;
+
+#[doc(hidden)]
+pub mod session;
