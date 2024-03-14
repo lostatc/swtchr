@@ -89,8 +89,8 @@ Let's break down the Sway keybinds we set up in [Getting
 started](#getting-started):
 
 ```
-bindsym $mod+Tab mode swtchr; exec ~/.local/bin/swtchr
-bindsym $mod+Shift+Tab mode swtchr; exec ~/.local/bin/swtchr
+bindsym $mod+Tab mode swtchr; exec ~/.cargo/bin/swtchr
+bindsym $mod+Shift+Tab mode swtchr; exec ~/.cargo/bin/swtchr
 ```
 
 We're using `<Super>Tab` both to open the window switcher and to cycle through
