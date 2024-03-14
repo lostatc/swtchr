@@ -5,7 +5,7 @@ use gtk::Label;
 
 use super::app_bar::AppBar;
 use super::app_button::AppButton;
-use crate::sway::Window;
+use swtchr::sway::Window;
 
 glib::wrapper! {
     pub struct Overlay(ObjectSubclass<imp::Overlay>)
@@ -61,7 +61,7 @@ mod imp {
     use gtk::subclass::prelude::*;
     use gtk::{Align, Orientation};
 
-    use crate::sway::SwayWindowId;
+    use swtchr::sway::SwayWindowId;
 
     #[derive(Debug, Default, Properties)]
     #[properties(wrapper_type = super::Overlay)]

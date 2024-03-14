@@ -45,7 +45,7 @@ mod imp {
     use gtk::subclass::prelude::*;
     use gtk::{Align, Orientation};
 
-    use crate::sway::SwayWindowId;
+    use swtchr::sway::SwayWindowId;
 
     #[derive(Debug, Default, Properties)]
     #[properties(wrapper_type = super::AppBar)]

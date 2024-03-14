@@ -2,7 +2,7 @@ use glib::Object;
 use gtk::glib;
 use gtk::prelude::*;
 
-use crate::sway::Window;
+use swtchr::sway::Window;
 
 glib::wrapper! {
     pub struct AppButton(ObjectSubclass<imp::AppButton>)
@@ -34,8 +34,8 @@ mod imp {
     use gtk::prelude::*;
     use gtk::subclass::prelude::*;
 
-    use crate::sway::switch_window;
-    use crate::sway::SwayWindowId;
+    use swtchr::sway::switch_window;
+    use swtchr::sway::SwayWindowId;
 
     #[derive(Debug, Default, Properties)]
     #[properties(wrapper_type = super::AppButton)]

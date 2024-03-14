@@ -5,7 +5,7 @@ use gtk::prelude::*;
 use gtk::Application;
 
 use super::overlay::Overlay;
-use crate::sway;
+use swtchr::sway;
 
 glib::wrapper! {
     pub struct Window(ObjectSubclass<imp::Window>)
@@ -44,7 +44,7 @@ mod imp {
     use gtk::prelude::*;
     use gtk::subclass::prelude::*;
 
-    use crate::sway::SwayWindowId;
+    use swtchr::sway::SwayWindowId;
 
     #[derive(Debug, Default, Properties)]
     #[properties(wrapper_type = super::Window)]

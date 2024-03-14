@@ -1,7 +1,6 @@
 mod components;
 mod config;
 mod ipc;
-mod sway;
 
 use std::rc::Rc;
 
@@ -15,8 +14,8 @@ use gtk::{Application, CssProvider, DirectionType, EventControllerKey, Settings}
 use gtk4_layer_shell::{KeyboardMode, Layer, LayerShell};
 
 use config::Config;
-use sway::{SwayMode, WindowSubscription};
 use swtchr::ipc::Command as SwtchrCommand;
+use swtchr::sway::{self, SwayMode, WindowSubscription};
 
 const APP_ID: &str = "io.github.lostatc.swtchr";
 const WINDOW_TITLE: &str = "swtchr";
