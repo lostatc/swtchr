@@ -4,9 +4,6 @@
 #
 # https://github.com/lostatc/swtchr
 #
-# This config file shows the same defaults that swtchr uses if it can't find a
-# config file. Commented lines represent values that are are unset by default.
-#
 
 # Override the icon theme used in the window switcher.
 # Example: Papirus

@@ -1,20 +1,30 @@
+use std::env;
+use std::fs;
+use std::io::{self, Read, Write};
+use std::path::PathBuf;
+
+use eyre::{eyre, WrapErr};
 use serde::Deserialize;
+
+const DEFAULT_CONFIG: &str = include_str!("../swtchr.toml");
+
+fn config_file_path() -> eyre::Result<PathBuf> {
+    let xdg_config_dir = env::var("XDG_CONFIG_HOME")
+        .map(PathBuf::from)
+        .or_else(|_| env::var("HOME").map(|home_dir| PathBuf::from(home_dir).join(".config")))
+        .wrap_err("Could not find the swtchr config directory. It looks like both $XDG_CONFIG_HOME and $HOME are unset.")?;
+
+    Ok(xdg_config_dir.join("swtchr").join("swtchr.toml"))
+}
 
 #[derive(Debug, Deserialize)]
 pub struct KeymapConfig {
-    #[serde(default = "defaults::dismiss_key")]
     pub dismiss: Option<String>,
-    #[serde(default = "defaults::select_key")]
     pub select: Option<String>,
-    #[serde(default = "defaults::peek_key")]
     pub peek: Option<String>,
-    #[serde(default = "defaults::next_key")]
     pub next: Option<String>,
-    #[serde(default = "defaults::prev_key")]
     pub prev: Option<String>,
-    #[serde(default = "defaults::peek_next_key")]
     pub peek_next: Option<String>,
-    #[serde(default = "defaults::peek_prev_key")]
     pub peek_prev: Option<String>,
 }
 
@@ -22,86 +32,59 @@ pub struct KeymapConfig {
 pub struct Config {
     pub icon_theme: Option<String>,
     pub font: Option<String>,
-    #[serde(default = "defaults::urgent_first")]
     pub urgent_first: bool,
-    #[serde(default = "defaults::dismiss_on_release")]
     pub dismiss_on_release: bool,
-    #[serde(default = "defaults::select_on_release")]
     pub select_on_release: bool,
-    #[serde(default = "defaults::release_keys")]
     pub release_keys: Vec<String>,
     pub keymap: KeymapConfig,
 }
 
 impl Config {
     pub fn read() -> eyre::Result<Self> {
-        // TODO: Parse an actual TOML file to get this config.
-        Ok(Config {
-            icon_theme: Some(String::from("Papirus-Dark")),
-            font: Some(String::from("Fira Sans 13")),
-            urgent_first: defaults::urgent_first(),
-            dismiss_on_release: defaults::dismiss_on_release(),
-            select_on_release: defaults::select_on_release(),
-            release_keys: defaults::release_keys(),
-            keymap: KeymapConfig {
-                dismiss: defaults::dismiss_key(),
-                select: defaults::select_key(),
-                peek: defaults::peek_key(),
-                next: defaults::next_key(),
-                prev: defaults::prev_key(),
-                peek_next: defaults::peek_next_key(),
-                peek_prev: defaults::peek_prev_key(),
-            },
-        })
-    }
-}
+        let config_path = config_file_path().wrap_err("Failed getting the config file path.")?;
 
-// Any changes to the config defaults must be reflected in the example `swtchr.toml`.
-mod defaults {
-    pub fn urgent_first() -> bool {
-        true
-    }
+        // Create the parent directory of the config file if it doesn't already exist.
+        fs::create_dir_all(
+            config_path
+                .parent()
+                .ok_or(eyre!(
+                    "The config file path does not have a parent directory. This is a bug."
+                ))
+                .wrap_err("Failed creating the parent directory for the config file.")?,
+        )?;
 
-    pub fn dismiss_on_release() -> bool {
-        true
-    }
+        match fs::OpenOptions::new()
+            .create_new(true)
+            .write(true)
+            .open(&config_path)
+        {
+            // Create the config file and write the default config to it if and only if it doesn't
+            // already exist.
+            Ok(mut file) => {
+                file.write_all(DEFAULT_CONFIG.as_bytes())
+                    .wrap_err("Failed writing the default config to the config file.")?;
 
-    pub fn select_on_release() -> bool {
-        true
-    }
+                toml::from_str(DEFAULT_CONFIG)
+                    .wrap_err("Failed deserializing default config. This is a bug.")
+            }
 
-    pub fn release_keys() -> Vec<String> {
-        vec![
-            String::from("<Super>Super_L"),
-            String::from("<Super><Shift>Super_L"),
-        ]
-    }
+            // The config file already exists. Read it.
+            Err(err) if err.kind() == io::ErrorKind::AlreadyExists => {
+                let mut file = fs::File::open(&config_path)
+                    .wrap_err("Failed opening the config file for reading.")?;
 
-    pub fn dismiss_key() -> Option<String> {
-        Some(String::from("Escape"))
-    }
+                // A conservative estimate of the size of the buffer we'll need.
+                let mut file_contents = String::with_capacity(DEFAULT_CONFIG.len() * 2);
 
-    pub fn select_key() -> Option<String> {
-        None
-    }
+                file.read_to_string(&mut file_contents)
+                    .wrap_err("Failed reading the contents of the config file.")?;
 
-    pub fn peek_key() -> Option<String> {
-        None
-    }
-
-    pub fn next_key() -> Option<String> {
-        Some(String::from("<Super>Tab"))
-    }
-
-    pub fn prev_key() -> Option<String> {
-        Some(String::from("<Super><Shift>Tab"))
-    }
-
-    pub fn peek_next_key() -> Option<String> {
-        None
-    }
-
-    pub fn peek_prev_key() -> Option<String> {
-        None
+                toml::from_str(&file_contents)
+                    .wrap_err("Failed deserializing the config file. Is it valid TOML? Double-check your syntax.")
+            }
+            Err(err) => {
+                Err(err).wrap_err("Failed trying to check if the config file already exists.")?
+            }
+        }
     }
 }

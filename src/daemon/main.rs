@@ -238,7 +238,7 @@ fn main() -> eyre::Result<()> {
 
     let args = Cli::parse();
 
-    let config = Config::read()?;
+    let config = Config::read().wrap_err("Failed reading the swtchr.toml config file.")?;
 
     if !args.no_check {
         check_is_sway_session()?;

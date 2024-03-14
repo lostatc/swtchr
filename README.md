@@ -39,12 +39,14 @@ service instead of via your Sway config.
 
 ## Configuring swtchr
 
-If you want to customize the behavior or keybindings of swtchr, you can copy
-the example [swtchr.toml](./etc/swtchr.toml) config file to
-`~/.config/swtchr/swtchr.toml`. There are comments documenting each of the
-available options.
+You can configure the behavior, look, and keybindings for swtchr in
+`~/.config/swtchr/swtchr.toml`. An example config file with sensible defaults
+will be generated there the first time you start the swtchr daemon.
 
-swtchr will look for that config file in these places:
+The comments in the example config file document what each option does. You can
+find this file in the repo at [src/swtchr.toml](./src/swtchr.toml).
+
+swtchr will look for its config file in these places:
 
 1. `$XDG_CONFIG_HOME/swtchr/swtchr.toml`
 2. `~/.config/swtchr/swtchr.toml`
