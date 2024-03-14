@@ -29,15 +29,13 @@ impl WindowQueue {
             WindowEvent::Focus(window) => {
                 self.highest_priority += 1;
 
-                self.map
-                    .entry(window.id)
-                    .and_modify(|window_priority| {
-                        window_priority.priority = self.highest_priority;
-                    })
-                    .or_insert(WindowPriority {
+                self.map.insert(
+                    window.id,
+                    WindowPriority {
                         window,
                         priority: self.highest_priority,
-                    });
+                    },
+                );
             }
             WindowEvent::Close(node_id) => {
                 self.map.remove(&node_id);
