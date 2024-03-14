@@ -41,7 +41,7 @@ fn main() -> eyre::Result<()> {
 
     let app = Application::builder().application_id(APP_ID).build();
 
-    app.connect_startup(|_| load_css());
+    app.connect_startup(|_| load_css().expect("Failed to load the GTK CSS."));
     app.connect_activate(move |app| build_window(&config, app, Rc::clone(&subscription)));
 
     let exit_code = app.run();

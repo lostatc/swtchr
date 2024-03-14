@@ -30,8 +30,10 @@ bindsym $mod+Shift+Tab mode swtchr; exec ~/.cargo/bin/swtchr
 mode swtchr bindsym Backspace mode default
 ```
 
-See [Configuring swtchr](#configuring-swtchr) to to customize the behavior and
+See [Configuring swtchr](#configuring-swtchr) to customize the behavior and
 keybindings.
+
+See [Styling swtchr](#styling-swtchr) to to customize the appearance.
 
 See [Sway keybinds](#sway-keybinds) to understand what's going on with the
 `mode swtchr` part.
@@ -41,17 +43,41 @@ service instead of via your Sway config.
 
 ## Configuring swtchr
 
-You can configure the behavior, look, and keybindings for swtchr in
+You can configure the behavior, and keybindings for swtchr in
 `~/.config/swtchr/swtchr.toml`. An example config file with sensible defaults
 will be generated there the first time you start the swtchr daemon.
 
 The comments in the example config file document what each option does. You can
 find this file in the repo at [src/swtchr.toml](./src/swtchr.toml).
 
-swtchr will look for its config file in these places:
+swtchr will look for the `swtchr.toml` file in these places:
 
 1. `$XDG_CONFIG_HOME/swtchr/swtchr.toml`
 2. `~/.config/swtchr/swtchr.toml`
+
+## Styling swtchr
+
+You can customize the styling of the window switcher using [GTK
+CSS](https://docs.gtk.org/gtk4/css-properties.html). Just drop a CSS file here:
+
+```
+~/.config/swtchr/style.css
+```
+
+You can look at the default stylesheet at [src/style.css](./src/style.css) as
+an example.
+
+Additionally, you can open the interactive GTK debugger to inspect objects, see
+their CSS classes, and apply CSS styles live:
+
+```shell
+env GTK_DEBUG=interactive swtchrd
+```
+
+swtchr will look for the `style.css` file in these places:
+
+1. `$XDG_CONFIG_HOME/swtchr/style.css`
+2. `~/.config/swtchr/style.css`
 
 ## Sway keybinds
 

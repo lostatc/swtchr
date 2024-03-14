@@ -8,13 +8,39 @@ use serde::Deserialize;
 
 const DEFAULT_CONFIG: &str = include_str!("../swtchr.toml");
 
-fn config_file_path() -> eyre::Result<PathBuf> {
-    let xdg_config_dir = env::var("XDG_CONFIG_HOME")
+fn config_dir_path() -> eyre::Result<PathBuf> {
+    Ok(env::var("XDG_CONFIG_HOME")
         .map(PathBuf::from)
         .or_else(|_| env::var("HOME").map(|home_dir| PathBuf::from(home_dir).join(".config")))
-        .wrap_err("Could not find the swtchr config directory. It looks like both $XDG_CONFIG_HOME and $HOME are unset.")?;
+        .wrap_err("Could not find the swtchr config directory. It looks like both $XDG_CONFIG_HOME and $HOME are unset.")?
+        .join("swtchr"))
+}
 
-    Ok(xdg_config_dir.join("swtchr").join("swtchr.toml"))
+fn config_file_path() -> eyre::Result<PathBuf> {
+    Ok(config_dir_path()?.join("swtchr.toml"))
+}
+
+fn css_file_path() -> eyre::Result<PathBuf> {
+    Ok(config_dir_path()?.join("style.css"))
+}
+
+pub fn user_css_override() -> eyre::Result<Option<String>> {
+    let file_result = fs::File::open(
+        css_file_path().wrap_err("Failed to get the path of the user's custom CSS file.")?,
+    );
+
+    match file_result {
+        Ok(mut file) => {
+            let mut css_contents = String::new();
+
+            file.read_to_string(&mut css_contents)
+                .wrap_err("Failed reading the contents of the user's custom CSS file.")?;
+
+            Ok(Some(css_contents))
+        }
+        Err(err) if err.kind() == io::ErrorKind::NotFound => Ok(None),
+        Err(err) => Err(err).wrap_err("Failed opening the user's custom CSS file."),
+    }
 }
 
 #[derive(Debug, Deserialize)]

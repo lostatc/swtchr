@@ -1,6 +1,7 @@
 use std::collections::HashSet;
 use std::rc::Rc;
 
+use eyre::{eyre, WrapErr};
 use gtk::gdk::Display;
 use gtk::gio::ActionEntry;
 use gtk::glib::{self, clone};
@@ -11,6 +12,7 @@ use gtk4_layer_shell::{KeyboardMode, Layer, LayerShell};
 use super::components::Window;
 use super::config::Config;
 use super::ipc;
+use crate::config::user_css_override;
 use crate::WINDOW_TITLE;
 use swtchr::ipc::Command as SwtchrCommand;
 use swtchr::sway::{self, SwayMode, WindowSubscription};
@@ -186,15 +188,32 @@ fn register_keybinds(config: &Config, app: &Application) {
     }
 }
 
-pub fn load_css() {
-    let provider = CssProvider::new();
-    provider.load_from_string(include_str!("style.css"));
+pub fn load_css() -> eyre::Result<()> {
+    // Load the base CSS.
+    let app_provider = CssProvider::new();
+    app_provider.load_from_string(include_str!("../style.css"));
+
+    // Load the user's CSS overrides, if provided.
+    let user_provider = CssProvider::new();
+    if let Some(user_css) = user_css_override().wrap_err("Failed to read the user's custom CSS.")? {
+        user_provider.load_from_string(&user_css);
+    }
+
+    let display = Display::default().ok_or(eyre!("Could not connect to a display."))?;
 
     gtk::style_context_add_provider_for_display(
-        &Display::default().expect("Could not connect to a display."),
-        &provider,
+        &display,
+        &app_provider,
         gtk::STYLE_PROVIDER_PRIORITY_APPLICATION,
     );
+
+    gtk::style_context_add_provider_for_display(
+        &display,
+        &user_provider,
+        gtk::STYLE_PROVIDER_PRIORITY_USER,
+    );
+
+    Ok(())
 }
 
 pub fn build_window(config: &Config, app: &Application, subscription: Rc<WindowSubscription>) {

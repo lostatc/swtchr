@@ -9,8 +9,8 @@
 # Example: Papirus
 #icon_theme = ""
 
-# Override the font family and size used in the window switcher.
-# Example: Fira Sans 13
+# Override the font family used in the window switcher.
+# Example: Fira Sans
 #font = ""
 
 # Order windows with the urgency hint before all other windows in the window
