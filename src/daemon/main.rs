@@ -4,6 +4,7 @@ mod config;
 mod gui;
 mod ipc;
 
+use std::path::PathBuf;
 use std::rc::Rc;
 
 use clap::Parser;
@@ -13,7 +14,7 @@ use gtk::prelude::*;
 use gtk::Application;
 
 use cli::Cli;
-use config::Config;
+use config::{config_file_path, Config};
 use gui::{build_window, load_css};
 use swtchr::session::check_is_sway_session;
 use swtchr::sway::WindowSubscription;
@@ -28,7 +29,13 @@ fn main() -> eyre::Result<()> {
 
     let args = Cli::parse();
 
-    let config = Config::read().wrap_err("Failed reading the swtchr.toml config file.")?;
+    let config_path = match &args.config {
+        Some(path) => PathBuf::from(path),
+        None => config_file_path().wrap_err("Failed getting the config file path.")?,
+    };
+
+    let config =
+        Config::read(&config_path).wrap_err("Failed reading the swtchr.toml config file.")?;
 
     if !args.no_check {
         check_is_sway_session()?;

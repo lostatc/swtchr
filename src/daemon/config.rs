@@ -1,6 +1,7 @@
 use std::env;
 use std::fs;
 use std::io::{self, Read, Write};
+use std::path::Path;
 use std::path::PathBuf;
 
 use eyre::{bail, eyre, WrapErr};
@@ -16,7 +17,7 @@ fn config_dir_path() -> eyre::Result<PathBuf> {
         .join("swtchr"))
 }
 
-fn config_file_path() -> eyre::Result<PathBuf> {
+pub fn config_file_path() -> eyre::Result<PathBuf> {
     Ok(config_dir_path()?.join("swtchr.toml"))
 }
 
@@ -92,13 +93,10 @@ impl Config {
         Ok(())
     }
 
-    pub fn read() -> eyre::Result<Self> {
-        let config_path = config_file_path().wrap_err("Failed getting the config file path.")?;
-
+    pub fn read(path: &Path) -> eyre::Result<Self> {
         // Create the parent directory of the config file if it doesn't already exist.
         fs::create_dir_all(
-            config_path
-                .parent()
+            path.parent()
                 .ok_or(eyre!(
                     "The config file path does not have a parent directory. This is a bug."
                 ))
@@ -108,7 +106,7 @@ impl Config {
         let config: Config = match fs::OpenOptions::new()
             .create_new(true)
             .write(true)
-            .open(&config_path)
+            .open(path)
         {
             // Create the config file and write the default config to it if and only if it doesn't
             // already exist.
@@ -122,8 +120,8 @@ impl Config {
 
             // The config file already exists. Read it.
             Err(err) if err.kind() == io::ErrorKind::AlreadyExists => {
-                let mut file = fs::File::open(&config_path)
-                    .wrap_err("Failed opening the config file for reading.")?;
+                let mut file =
+                    fs::File::open(path).wrap_err("Failed opening the config file for reading.")?;
 
                 // A conservative estimate of the size of the buffer we'll need.
                 let mut file_contents = String::with_capacity(DEFAULT_CONFIG.len() * 2);
