@@ -27,7 +27,6 @@ pub fn switch_window(id: SwayWindowId) -> eyre::Result<()> {
 #[derive(Debug, Clone, Copy)]
 pub enum SwayMode {
     Default,
-    Swtchr,
 }
 
 impl SwayMode {
@@ -36,7 +35,6 @@ impl SwayMode {
 
         match self {
             Default => "default",
-            Swtchr => "swtchr",
         }
     }
 }

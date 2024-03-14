@@ -42,12 +42,6 @@ fn register_actions(app_window: &ApplicationWindow, on_display: DisplayCallback)
                 on_display();
                 window.set_keyboard_mode(KeyboardMode::Exclusive);
                 window.set_visible(true);
-
-                // Switch Sway into a special keybind mode to cancel any compositor keybinds that
-                // may conflict with swtchr keybinds. This also gives the user the opportunity to
-                // define their own Sway keybinds specific to when the swtchr overlay is open.
-                sway::switch_mode(SwayMode::Swtchr)
-                    .expect("failed switching Sway to the `swtchr` keybind mode");
             }
         })
         .build();

@@ -12,7 +12,7 @@ recently accessed.
 First, install swtchr. You can find prebuilt binaries in the GitHub releases
 page, or you can [build from source](#build-from-source).
 
-Next, drop these commands into your Sway config, which is probably located at
+Next, drop these commands into your Sway config, which is usually located at
 `~/.config/sway/config`. Substitute whatever path you installed the `swtchr`
 and `swtchrd` binaries to.
 
@@ -21,12 +21,15 @@ and `swtchrd` binaries to.
 exec ~/.local/bin/swtchrd
 
 # Set up keybinds to open the window switcher.
-bindsym $mod+Tab exec ~/.local/bin/swtchr
-bindsym $mod+Shift+Tab exec ~/.local/bin/swtchr
+bindsym $mod+Tab mode swtchr; exec ~/.local/bin/swtchr
+bindsym $mod+Shift+Tab mode swtchr; exec ~/.local/bin/swtchr
 
 # This is important! More information below.
-mod swtchr bindsym Backspace mode default
+mode swtchr bindsym Backspace mode default
 ```
+
+See [Sway keybinds](#sway-keybinds) below to understand what's going on with
+the `mode swtchr` part.
 
 ## Configuring swtchr
 
@@ -35,24 +38,40 @@ the example [swtchr.toml](./swtchr.toml) config file to
 `~/.config/swtchr/swtchr.toml`. There are comments documenting each of the
 available options.
 
-The keybinds we set up in your Sway config in [Getting
-started](#getting-started) are only for opening the window switcher; when the
-window switcher is open, they're overridden by the keybinds in your
-`swtchr.toml`.
+swtchr will look for that config file in these places:
 
-Let's explain the purpose of this line in your Sway config:
+1. `$XDG_CONFIG_HOME/swtchr/swtchr.toml`
+2. `~/.config/swtchr/swtchr.toml`
+
+## Sway keybinds
+
+You need to configure keybinds in your Sway config to open the window switcher.
+All other swtchr keybinds are configured in your
+[swtchr.toml](#configuring-swtchr).
+
+Let's break down the Sway keybinds we set up in [Getting
+started](#getting-started):
+
+```
+bindsym $mod+Tab mode swtchr; exec ~/.local/bin/swtchr
+bindsym $mod+Shift+Tab mode swtchr; exec ~/.local/bin/swtchr
+```
+
+We're using `<Super>Tab` both to open the window switcher and to cycle through
+windows once it's open. To prevent Sway from consuming those keypresses once
+the window switcher is open, we need to change the [Sway binding
+mode](https://i3wm.org/docs/userguide.html#binding_modes). swtchr will
+automatically change your binding mode back to `default` when the window
+switcher closes.
 
 ```
 mod swtchr bindsym Backspace mode default
 ```
 
-Sway has a concept of keybinding "modes," which are distinct keymaps you can
-alternate between. When the window switcher opens, swtchr changes your Sway
-mode to one called `swtchr`, and it automatically changes you back to the
-default mode when the window switcher closes.
-
-However, Sway requires that all modes have a keybind set up to escape out of
-them. To work around this, you need to add one in your Sway config.
+Sway only allows you to change the binding mode if you've configured a keybind
+to escape back to the `default` mode, so you'll need this line as well. You'll
+need to use this keybind if the swtchr daemon crashes before it's able to
+switch back to the `default` mode.
 
 ## Building from source
 
