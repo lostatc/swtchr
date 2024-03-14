@@ -27,6 +27,7 @@ impl AppBar {
         for app_button in app_buttons.iter() {
             app_button.connect_has_focus_notify(clone!(@weak obj => move |button| {
                 obj.set_current_title(button.window_title());
+                obj.set_window_id(button.window_id());
             }));
         }
 
@@ -35,6 +36,7 @@ impl AppBar {
 }
 
 mod imp {
+    use std::cell::Cell;
     use std::cell::RefCell;
 
     use glib::Properties;
@@ -43,11 +45,15 @@ mod imp {
     use gtk::subclass::prelude::*;
     use gtk::{Align, Orientation};
 
+    use crate::sway::SwayWindowId;
+
     #[derive(Debug, Default, Properties)]
     #[properties(wrapper_type = super::AppBar)]
     pub struct AppBar {
         #[property(get, set)]
         current_title: RefCell<String>,
+        #[property(get, set)]
+        window_id: Cell<SwayWindowId>,
     }
 
     #[glib::object_subclass]

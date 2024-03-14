@@ -5,17 +5,15 @@ mod sway;
 
 use std::rc::Rc;
 
+use components::Window;
 use eyre::{bail, WrapErr};
 use gtk::gdk::Display;
 use gtk::gio::ActionEntry;
 use gtk::glib::{self, clone};
 use gtk::prelude::*;
-use gtk::{
-    Application, ApplicationWindow, CssProvider, DirectionType, EventControllerKey, Settings,
-};
+use gtk::{Application, CssProvider, DirectionType, EventControllerKey, Settings};
 use gtk4_layer_shell::{KeyboardMode, Layer, LayerShell};
 
-use components::Overlay;
 use config::Config;
 use sway::{SwayMode, WindowSubscription};
 use swtchr::ipc::Command as SwtchrCommand;
@@ -33,10 +31,10 @@ fn set_settings(config: &Config) {
 
 type DisplayCallback = Box<dyn Fn()>;
 
-fn register_actions(app_window: &ApplicationWindow, on_display: DisplayCallback) {
+fn register_actions(app_window: &Window, on_display: DisplayCallback) {
     // Make the overlay visible and capture keyboard events.
     let show = ActionEntry::builder("show")
-        .activate(move |window: &ApplicationWindow, _, _| {
+        .activate(move |window: &Window, _, _| {
             // Check if the window is already visible first so we don't needlessly repopulate the
             // window list every time the user mashes the key.
             if !window.get_visible() {
@@ -49,7 +47,7 @@ fn register_actions(app_window: &ApplicationWindow, on_display: DisplayCallback)
 
     // Hide the overlay and release control of the keyboard.
     let dismiss = ActionEntry::builder("dismiss")
-        .activate(|window: &ApplicationWindow, _, _| {
+        .activate(|window: &Window, _, _| {
             window.set_keyboard_mode(KeyboardMode::None);
             window.set_visible(false);
 
@@ -62,7 +60,7 @@ fn register_actions(app_window: &ApplicationWindow, on_display: DisplayCallback)
 
     // Switch to the selected window and hide the overlay.
     let select = ActionEntry::builder("select")
-        .activate(|window: &ApplicationWindow, _, _| {
+        .activate(|window: &Window, _, _| {
             window.activate_default();
             WidgetExt::activate_action(window, "win.dismiss", None)
                 .expect("failed to activate action to dismiss window");
@@ -71,28 +69,28 @@ fn register_actions(app_window: &ApplicationWindow, on_display: DisplayCallback)
 
     // Switch to the selected window without hiding the overlay.
     let peek = ActionEntry::builder("peek")
-        .activate(|window: &ApplicationWindow, _, _| {
+        .activate(|window: &Window, _, _| {
             window.activate_default();
         })
         .build();
 
     // Select the next window in the list.
     let next = ActionEntry::builder("next")
-        .activate(|window: &ApplicationWindow, _, _| {
+        .activate(|window: &Window, _, _| {
             window.child_focus(DirectionType::TabForward);
         })
         .build();
 
     // Select the previous window in the list.
     let prev = ActionEntry::builder("prev")
-        .activate(|window: &ApplicationWindow, _, _| {
+        .activate(|window: &Window, _, _| {
             window.child_focus(DirectionType::TabBackward);
         })
         .build();
 
     // Select the next window in the list and switch to it without hiding the overlay.
     let peek_next = ActionEntry::builder("peek-next")
-        .activate(|window: &ApplicationWindow, _, _| {
+        .activate(|window: &Window, _, _| {
             window.child_focus(DirectionType::TabForward);
             window.activate_default();
         })
@@ -100,7 +98,7 @@ fn register_actions(app_window: &ApplicationWindow, on_display: DisplayCallback)
 
     // Select the previous window in the list and switch to it without hiding the overlay.
     let peek_prev = ActionEntry::builder("peek-prev")
-        .activate(|window: &ApplicationWindow, _, _| {
+        .activate(|window: &Window, _, _| {
             window.child_focus(DirectionType::TabBackward);
             window.activate_default();
         })
@@ -111,7 +109,7 @@ fn register_actions(app_window: &ApplicationWindow, on_display: DisplayCallback)
     ]);
 }
 
-fn register_mod_release_controller(config: &Config, window: &ApplicationWindow) {
+fn register_mod_release_controller(config: &Config, window: &Window) {
     let dismiss_on_release = config.dismiss_on_release;
     let select_on_release = config.select_on_release;
 
@@ -148,7 +146,7 @@ fn register_mod_release_controller(config: &Config, window: &ApplicationWindow) 
     window.add_controller(controller);
 }
 
-fn register_ipc_command_handlers(window: &ApplicationWindow) -> eyre::Result<()> {
+fn register_ipc_command_handlers(window: &Window) -> eyre::Result<()> {
     let receiver = ipc::subscribe()?;
 
     glib::spawn_future_local(clone!(@weak window => async move {
@@ -195,10 +193,7 @@ fn register_keybinds(config: &Config, app: &Application) {
 }
 
 fn build_window(config: &Config, app: &Application, subscription: Rc<WindowSubscription>) {
-    let window = ApplicationWindow::builder()
-        .application(app)
-        .title(WINDOW_TITLE)
-        .build();
+    let window = Window::new(app, WINDOW_TITLE);
 
     set_settings(config);
 
@@ -207,13 +202,10 @@ fn build_window(config: &Config, app: &Application, subscription: Rc<WindowSubsc
     window.set_layer(Layer::Overlay);
     window.set_keyboard_mode(KeyboardMode::None);
 
-    let overlay = Overlay::new();
-    window.set_child(Some(&overlay));
-
     // Update the list of windows in the window switcher right before we display it.
-    let on_display = Box::new(move || {
-        overlay.update_windows(&subscription.get_window_list().unwrap());
-    });
+    let on_display = Box::new(clone!(@weak window => move || {
+        window.update_windows(&subscription.get_window_list().unwrap());
+    }));
 
     register_actions(&window, on_display);
     register_keybinds(config, app);

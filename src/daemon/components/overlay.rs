@@ -36,6 +36,10 @@ impl Overlay {
             .sync_create()
             .build();
 
+        self.bind_property("window-id", &app_bar, "window-id")
+            .sync_create()
+            .build();
+
         self.append(&app_bar);
         self.append(&window_label);
     }
@@ -48,15 +52,22 @@ impl Default for Overlay {
 }
 
 mod imp {
+    use std::cell::Cell;
+
+    use glib::Properties;
     use gtk::glib;
     use gtk::prelude::*;
     use gtk::subclass::prelude::*;
     use gtk::{Align, Orientation};
 
-    #[derive(Debug, Default)]
-    pub struct Overlay;
+    use crate::sway::SwayWindowId;
 
-    impl Overlay {}
+    #[derive(Debug, Default, Properties)]
+    #[properties(wrapper_type = super::Overlay)]
+    pub struct Overlay {
+        #[property(get, set)]
+        window_id: Cell<SwayWindowId>,
+    }
 
     #[glib::object_subclass]
     impl ObjectSubclass for Overlay {
@@ -65,6 +76,7 @@ mod imp {
         type ParentType = gtk::Box;
     }
 
+    #[glib::derived_properties]
     impl ObjectImpl for Overlay {
         fn constructed(&self) {
             self.obj().set_orientation(Orientation::Vertical);
