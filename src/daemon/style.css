@@ -35,5 +35,6 @@ window {
 }
 
 #window-title {
+  font-size: 12pt;
   color: #cdd6f4; /* Catppuccin Mocha Text */
 }
