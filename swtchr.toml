@@ -32,7 +32,8 @@ dismiss_on_release = true
 # releasing the Super key switches to the selected window.
 select_on_release = true
 
-# The key to activate `dismiss_on_release` and `select_on_release`.
+# The keys that activate `dismiss_on_release` and `select_on_release` when
+# they're released.
 #
 # If you want to trigger these events on the release of a modifier key (like
 # Super), you need to format it like `<Super>Super_L`, where you're including
@@ -40,7 +41,7 @@ select_on_release = true
 #
 # See the `keymap` section below for documentation on the format of keymap
 # strings.
-release_key = "<Super>Super_L"
+release_keys = ["<Super>Super_L", "<Super><Shift>Super_L"]
 
 # The keymap for the window switcher.
 #
@@ -55,27 +56,28 @@ release_key = "<Super>Super_L"
 # `GDK_KEY_`.
 # https://gitlab.gnome.org/GNOME/gtk/-/blob/main/gdk/gdkkeysyms.h
 [keymap]
-    # Close the window switcher without switching windows.
-    dismiss = "Escape"
 
-    # Switch focus to the currently selected window and close the window
-    # switcher.
-    select = "Return"
+# Close the window switcher without switching windows.
+dismiss = "Escape"
 
-    # Switch focus to the currently selected window without closing the window
-    # switcher.
-    #peek = ""
+# Switch focus to the currently selected window and close the window
+# switcher.
+select = "Return"
 
-    # Select the next window in the window switcher.
-    next = "<Super>Tab"
+# Switch focus to the currently selected window without closing the window
+# switcher.
+#peek = ""
 
-    # Select the previous window in the window switcher.
-    prev = "<Super><Shift>Tab"
+# Select the next window in the window switcher.
+next = "<Super>Tab"
 
-    # Select the next window in the window switcher and switch focus to it
-    # without closing the window switcher.
-    #peek_next = ""
+# Select the previous window in the window switcher.
+prev = "<Super><Shift>Tab"
 
-    # Select the previous window in the window switcher and switch focus to it
-    # without closing the window switcher.
-    #peek_prev = ""
+# Select the next window in the window switcher and switch focus to it
+# without closing the window switcher.
+#peek_next = ""
+
+# Select the previous window in the window switcher and switch focus to it
+# without closing the window switcher.
+#peek_prev = ""

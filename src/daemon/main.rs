@@ -2,6 +2,7 @@ mod components;
 mod config;
 mod ipc;
 
+use std::collections::HashSet;
 use std::rc::Rc;
 
 use components::Window;
@@ -108,14 +109,15 @@ fn register_actions(app_window: &Window, on_display: DisplayCallback) {
     ]);
 }
 
-fn register_mod_release_controller(config: &Config, window: &Window) {
+fn register_key_release_controller(config: &Config, window: &Window) {
     let dismiss_on_release = config.dismiss_on_release;
     let select_on_release = config.select_on_release;
 
-    let release_key = match &config.release_key {
-        Some(key) => key.clone(),
-        None => return,
-    };
+    let release_keys = config
+        .release_keys
+        .iter()
+        .filter_map(gtk::accelerator_parse)
+        .collect::<HashSet<_>>();
 
     if !dismiss_on_release && !select_on_release {
         return;
@@ -125,19 +127,18 @@ fn register_mod_release_controller(config: &Config, window: &Window) {
 
     controller.connect_key_released(
         clone!(@weak window => move |_, actual_key, _, actual_modifiers| {
-            let (expected_key, expected_modifiers) = gtk::accelerator_parse(&release_key)
-                .expect("invalid keybind format for `release_key`");
+            if !release_keys.contains(&(actual_key, actual_modifiers)) {
+                return;
+            }
 
-            if actual_key == expected_key && actual_modifiers == expected_modifiers {
-                if select_on_release {
-                    WidgetExt::activate_action(&window, "win.select", None)
-                        .expect("failed to activate action to select window on key release");
-                }
+            if select_on_release {
+                WidgetExt::activate_action(&window, "win.select", None)
+                    .expect("failed to activate action to select window on key release");
+            }
 
-                if dismiss_on_release {
-                    WidgetExt::activate_action(&window, "win.dismiss", None)
-                        .expect("failed to activate action to dismiss switcher on key release");
-                }
+            if dismiss_on_release {
+                WidgetExt::activate_action(&window, "win.dismiss", None)
+                    .expect("failed to activate action to dismiss switcher on key release");
             }
         }),
     );
@@ -208,7 +209,7 @@ fn build_window(config: &Config, app: &Application, subscription: Rc<WindowSubsc
 
     register_actions(&window, on_display);
     register_keybinds(config, app);
-    register_mod_release_controller(config, &window);
+    register_key_release_controller(config, &window);
     register_ipc_command_handlers(&window).expect("failed subscribing to IPC events");
 
     // The window is initially hidden until it receives the signal to display itself.

@@ -28,8 +28,8 @@ pub struct Config {
     pub dismiss_on_release: bool,
     #[serde(default = "defaults::select_on_release")]
     pub select_on_release: bool,
-    #[serde(default = "defaults::release_key")]
-    pub release_key: Option<String>,
+    #[serde(default = "defaults::release_keys")]
+    pub release_keys: Vec<String>,
     pub keymap: KeymapConfig,
 }
 
@@ -42,7 +42,7 @@ impl Config {
             urgent_first: defaults::urgent_first(),
             dismiss_on_release: defaults::dismiss_on_release(),
             select_on_release: defaults::select_on_release(),
-            release_key: defaults::release_key(),
+            release_keys: defaults::release_keys(),
             keymap: KeymapConfig {
                 dismiss: defaults::dismiss_key(),
                 select: defaults::select_key(),
@@ -56,6 +56,7 @@ impl Config {
     }
 }
 
+// Any changes to the config defaults must be reflected in the example `swtchr.toml`.
 mod defaults {
     pub fn urgent_first() -> bool {
         true
@@ -69,8 +70,11 @@ mod defaults {
         true
     }
 
-    pub fn release_key() -> Option<String> {
-        Some(String::from("<Super>Super_L"))
+    pub fn release_keys() -> Vec<String> {
+        vec![
+            String::from("<Super>Super_L"),
+            String::from("<Super><Shift>Super_L"),
+        ]
     }
 
     pub fn dismiss_key() -> Option<String> {
