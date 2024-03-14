@@ -18,6 +18,7 @@ use gtk4_layer_shell::{KeyboardMode, Layer, LayerShell};
 use components::Overlay;
 use config::Config;
 use sway::{SwayMode, WindowSubscription};
+use swtchr::ipc::Command as SwtchrCommand;
 
 const APP_ID: &str = "io.github.lostatc.swtchr";
 const WINDOW_TITLE: &str = "swtchr";
@@ -152,7 +153,7 @@ fn register_ipc_command_handlers(window: &ApplicationWindow) -> eyre::Result<()>
 
     glib::spawn_future_local(clone!(@weak window => async move {
         while let Ok(msg) = receiver.recv().await {
-            use swtchr_common::Command::*;
+            use SwtchrCommand::*;
 
             match msg.expect("error receiving IPC command") {
                 Show => WidgetExt::activate_action(&window, "win.show", None).map_err(eyre::Report::from),

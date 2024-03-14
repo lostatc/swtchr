@@ -3,9 +3,10 @@ mod cli;
 use std::os::unix::net::UnixDatagram;
 
 use clap::Parser;
-use cli::Cli;
 use eyre::Context;
-use swtchr_common::{sock_path, Command};
+use swtchr::ipc::{sock_path, Command};
+
+use cli::Cli;
 
 fn main() -> eyre::Result<()> {
     color_eyre::install()?;
