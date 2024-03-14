@@ -12,7 +12,7 @@ recently accessed.
 ## Getting started
 
 First, install swtchr. You can find prebuilt binaries in the GitHub releases
-page, or you can [build from source](#build-from-source).
+page, or you can [build from source](#building-from-source).
 
 Next, drop these commands into your Sway config, which is usually located at
 `~/.config/sway/config`. Substitute whatever path you installed the `swtchr`
@@ -43,12 +43,12 @@ service instead of via your Sway config.
 
 ## Configuring swtchr
 
-You can configure the behavior, and keybindings for swtchr in
+You can configure the behavior and keybindings for swtchr in
 `~/.config/swtchr/swtchr.toml`. An example config file with sensible defaults
 will be generated there the first time you start the swtchr daemon.
 
 The comments in the example config file document what each option does. You can
-find this file in the repo at [src/swtchr.toml](./src/swtchr.toml).
+also take at look at the file in [src/swtchr.toml](./src/swtchr.toml).
 
 swtchr will look for the `swtchr.toml` file in these places:
 
