@@ -1,5 +1,7 @@
 # swtchr
 
+![A screenshot of the swtchr window switcher over a Sway desktop](./etc/screenshot.png)
+
 A pretty Gnome-style window switcher for the [Sway](https://swaywm.org/) window
 manager.
 
