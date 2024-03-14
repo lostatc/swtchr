@@ -20,13 +20,15 @@
 # switcher.
 urgent_first = true
 
-# Dismiss the window switcher overlay when the `release_key` is released.
+# Dismiss the window switcher overlay when any of the `release_keys` are
+# released. May be used with `select_on_release`.
 #
 # You can use this to implement Gnome-like `<Super>Tab` behavior, where
 # releasing the Super key switches to the selected window.
 dismiss_on_release = true
 
-# Switch to the currently selected window when the `release_key` is released.
+# Switch focus to the currently selected window when any of the `release_keys`
+# are released. May be used with `dismiss_on_release`.
 #
 # You can use this to implement Gnome-like `<Super>Tab` behavior, where
 # releasing the Super key switches to the selected window.
@@ -60,9 +62,8 @@ release_keys = ["<Super>Super_L", "<Super><Shift>Super_L"]
 # Close the window switcher without switching windows.
 dismiss = "Escape"
 
-# Switch focus to the currently selected window and close the window
-# switcher.
-select = "Return"
+# Switch focus to the currently selected window and close the window switcher.
+#select = ""
 
 # Switch focus to the currently selected window without closing the window
 # switcher.
@@ -74,8 +75,8 @@ next = "<Super>Tab"
 # Select the previous window in the window switcher.
 prev = "<Super><Shift>Tab"
 
-# Select the next window in the window switcher and switch focus to it
-# without closing the window switcher.
+# Select the next window in the window switcher and switch focus to it without
+# closing the window switcher.
 #peek_next = ""
 
 # Select the previous window in the window switcher and switch focus to it

@@ -82,7 +82,7 @@ mod defaults {
     }
 
     pub fn select_key() -> Option<String> {
-        Some(String::from("Return"))
+        None
     }
 
     pub fn peek_key() -> Option<String> {
