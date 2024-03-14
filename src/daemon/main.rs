@@ -54,23 +54,23 @@ fn register_actions(app_window: &Window, on_display: DisplayCallback) {
             // Switch Sway back to the default keybind mode, releasing exclusive control over the
             // keybinds.
             sway::switch_mode(SwayMode::Default)
-                .expect("failed switching Sway back to default keybind mode");
+                .expect("Failed switching Sway back to the default keybind mode.");
         })
         .build();
 
     // Switch to the selected window and hide the overlay.
     let select = ActionEntry::builder("select")
         .activate(|window: &Window, _, _| {
-            sway::switch_window(window.window_id()).unwrap();
+            sway::switch_window(window.window_id()).expect("Failed changing Sway window focus.");
             WidgetExt::activate_action(window, "win.dismiss", None)
-                .expect("failed to activate action to dismiss window");
+                .expect("Failed activating GTK action to dismiss the window switcher overlay.");
         })
         .build();
 
     // Switch to the selected window without hiding the overlay.
     let peek = ActionEntry::builder("peek")
         .activate(|window: &Window, _, _| {
-            sway::switch_window(window.window_id()).unwrap();
+            sway::switch_window(window.window_id()).expect("Failed changing Sway window focus.");
         })
         .build();
 
@@ -92,7 +92,7 @@ fn register_actions(app_window: &Window, on_display: DisplayCallback) {
     let peek_next = ActionEntry::builder("peek-next")
         .activate(|window: &Window, _, _| {
             window.child_focus(DirectionType::TabForward);
-            sway::switch_window(window.window_id()).unwrap();
+            sway::switch_window(window.window_id()).expect("Failed changing Sway window focus.");
         })
         .build();
 
@@ -100,7 +100,7 @@ fn register_actions(app_window: &Window, on_display: DisplayCallback) {
     let peek_prev = ActionEntry::builder("peek-prev")
         .activate(|window: &Window, _, _| {
             window.child_focus(DirectionType::TabBackward);
-            sway::switch_window(window.window_id()).unwrap();
+            sway::switch_window(window.window_id()).expect("Failed changing Sway window focus.");
         })
         .build();
 
@@ -133,12 +133,12 @@ fn register_key_release_controller(config: &Config, window: &Window) {
 
             if select_on_release {
                 WidgetExt::activate_action(&window, "win.select", None)
-                    .expect("failed to activate action to select window on key release");
+                    .expect("Failed activating GTK action to switch window focus on key release.");
             }
 
             if dismiss_on_release {
                 WidgetExt::activate_action(&window, "win.dismiss", None)
-                    .expect("failed to activate action to dismiss switcher on key release");
+                    .expect("Failed activating GTK action to dismiss window switcher on key release.");
             }
         }),
     );
@@ -153,9 +153,9 @@ fn register_ipc_command_handlers(window: &Window) -> eyre::Result<()> {
         while let Ok(msg) = receiver.recv().await {
             use SwtchrCommand::*;
 
-            match msg.expect("error receiving IPC command") {
+            match msg.expect("Error receiving IPC command from the swtchr client.") {
                 Show => WidgetExt::activate_action(&window, "win.show", None).map_err(eyre::Report::from),
-            }.expect("error dispatching IPC command")
+            }.expect("Error dispatching IPC command from the swtchr client.")
         }
     }));
 
@@ -204,13 +204,14 @@ fn build_window(config: &Config, app: &Application, subscription: Rc<WindowSubsc
 
     // Update the list of windows in the window switcher right before we display it.
     let on_display = Box::new(clone!(@weak window => move || {
-        window.update_windows(&subscription.get_window_list().unwrap());
+        window.update_windows(&subscription.get_window_list().expect("Failed getting window list to populate window switcher overlay."));
     }));
 
     register_actions(&window, on_display);
     register_keybinds(config, app);
     register_key_release_controller(config, &window);
-    register_ipc_command_handlers(&window).expect("failed subscribing to IPC events");
+    register_ipc_command_handlers(&window)
+        .expect("Failed subscribing to IPC events from the swtchr client.");
 
     // The window is initially hidden until it receives the signal to display itself.
     window.present();
@@ -235,7 +236,7 @@ fn main() -> eyre::Result<()> {
 
     let subscription = Rc::new(
         WindowSubscription::subscribe(config.urgent_first)
-            .wrap_err("failed getting Sway window subscription")?,
+            .wrap_err("Failed subscribing to Sway window focus events.")?,
     );
 
     let app = Application::builder().application_id(APP_ID).build();
@@ -246,7 +247,7 @@ fn main() -> eyre::Result<()> {
     let exit_code = app.run();
 
     if exit_code != glib::ExitCode::SUCCESS {
-        bail!("GTK overlay returned a non-zero exit code.")
+        bail!("GTK window switcher overlay returned a non-zero exit code.")
     }
 
     Ok(())

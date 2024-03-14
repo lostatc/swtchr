@@ -13,7 +13,7 @@ fn filter_event(
     event_result: swayipc::Fallible<Event>,
     urgent_first: bool,
 ) -> eyre::Result<Option<WindowEvent>> {
-    let event = event_result.wrap_err("failed reading Sway event result")?;
+    let event = event_result.wrap_err("Failed reading Sway event result.")?;
 
     let window_event = match event {
         Event::Window(window_event) => window_event,
@@ -57,10 +57,10 @@ impl WindowSubscription {
         // propagated next time the user opens the window switcher.
         let (err_sender, err_receiver) = sync_channel(0);
 
-        let connection = Connection::new().wrap_err("failed acquiring a Sway IPC connection")?;
+        let connection = Connection::new().wrap_err("Failed acquiring a Sway IPC connection.")?;
         let subscription = connection
             .subscribe([EventType::Window])
-            .wrap_err("failed opening a Sway window event subscription")?;
+            .wrap_err("Failed opening a Sway window event subscription.")?;
 
         let sending_queue = Arc::new(RwLock::new(WindowQueue::new()));
         let receiving_queue = Arc::clone(&sending_queue);
@@ -102,14 +102,14 @@ impl WindowSubscription {
             Ok(err) => return Err(err),
             // Only fail when the channel is disconnected, not when the channel is empty.
             Err(mpsc::TryRecvError::Disconnected) => {
-                bail!("window priority queue errors channel closed unexpectedly");
+                bail!("Window priority queue errors channel closed unexpectedly.");
             }
             _ => {}
         }
 
         match self.queue.read() {
             Ok(queue) => Ok(queue.sorted_windows()),
-            Err(_) => Err(eyre!("lock on window priority queue is poisoned")),
+            Err(_) => Err(eyre!("Lock on window priority queue is poisoned.")),
         }
     }
 }

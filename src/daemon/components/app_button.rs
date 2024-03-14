@@ -34,8 +34,7 @@ mod imp {
     use gtk::prelude::*;
     use gtk::subclass::prelude::*;
 
-    use swtchr::sway::switch_window;
-    use swtchr::sway::SwayWindowId;
+    use swtchr::sway::{self, SwayWindowId};
 
     #[derive(Debug, Default, Properties)]
     #[properties(wrapper_type = super::AppButton)]
@@ -60,7 +59,8 @@ mod imp {
 
     impl ButtonImpl for AppButton {
         fn clicked(&self) {
-            switch_window(self.window_id.get()).unwrap();
+            sway::switch_window(self.window_id.get())
+                .expect("Failed dispatching command to switching window focus on button click.");
         }
     }
 }

@@ -36,7 +36,10 @@ impl Command {
 
         Ok(match msg {
             b"show" => Show,
-            _ => bail!("unrecognized command received over IPC socket: '{:?}'", msg),
+            _ => bail!(
+                "Unrecognized command received over swtchrd IPC socket: '{:?}'.",
+                msg
+            ),
         })
     }
 }
