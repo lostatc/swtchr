@@ -26,10 +26,11 @@ fn send_msg() -> eyre::Result<()> {
 fn main() -> eyre::Result<()> {
     color_eyre::install()?;
 
-    // There are no CLI arguments we are interested in.
-    Cli::parse();
+    let args = Cli::parse();
 
-    check_is_sway_session()?;
+    if !args.no_check {
+        check_is_sway_session()?;
+    }
 
     if let Err(err) = send_msg() {
         // We weren't able to message the swtchrd socket to open the window switcher, so it can't

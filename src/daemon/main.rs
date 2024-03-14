@@ -1,3 +1,4 @@
+mod cli;
 mod components;
 mod config;
 mod ipc;
@@ -5,7 +6,7 @@ mod ipc;
 use std::collections::HashSet;
 use std::rc::Rc;
 
-use components::Window;
+use clap::Parser;
 use eyre::{bail, WrapErr};
 use gtk::gdk::Display;
 use gtk::gio::ActionEntry;
@@ -14,6 +15,8 @@ use gtk::prelude::*;
 use gtk::{Application, CssProvider, DirectionType, EventControllerKey, Settings};
 use gtk4_layer_shell::{KeyboardMode, Layer, LayerShell};
 
+use cli::Cli;
+use components::Window;
 use config::Config;
 use swtchr::ipc::Command as SwtchrCommand;
 use swtchr::session::check_is_sway_session;
@@ -233,9 +236,13 @@ fn load_css() {
 fn main() -> eyre::Result<()> {
     color_eyre::install()?;
 
+    let args = Cli::parse();
+
     let config = Config::read()?;
 
-    check_is_sway_session()?;
+    if !args.no_check {
+        check_is_sway_session()?;
+    }
 
     let subscription = Rc::new(
         WindowSubscription::subscribe(config.urgent_first)

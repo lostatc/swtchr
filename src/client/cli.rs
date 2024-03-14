@@ -8,4 +8,8 @@ use clap::Parser;
 /// To use swtchr, bind this command to a keyboard shortcut in your Sway config.
 #[derive(Parser, Clone)]
 #[command(name = "swtchr", author, version, about)]
-pub struct Cli;
+pub struct Cli {
+    /// Skip checking that the client is running in a Sway session.
+    #[arg(long)]
+    pub no_check: bool,
+}
