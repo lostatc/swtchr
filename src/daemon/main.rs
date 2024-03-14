@@ -236,6 +236,8 @@ fn load_css() {
 fn main() -> eyre::Result<()> {
     color_eyre::install()?;
 
+    gtk::init().wrap_err("Failed to initialize the GTK runtime.")?;
+
     let args = Cli::parse();
 
     let config = Config::read().wrap_err("Failed reading the swtchr.toml config file.")?;

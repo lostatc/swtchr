@@ -3,7 +3,7 @@ use std::fs;
 use std::io::{self, Read, Write};
 use std::path::PathBuf;
 
-use eyre::{eyre, WrapErr};
+use eyre::{bail, eyre, WrapErr};
 use serde::Deserialize;
 
 const DEFAULT_CONFIG: &str = include_str!("../swtchr.toml");
@@ -39,7 +39,33 @@ pub struct Config {
     pub keymap: KeymapConfig,
 }
 
+fn validate_keybind(name: &str, key: Option<&str>) -> eyre::Result<()> {
+    if let Some(key) = key {
+        if gtk::accelerator_parse(key).is_none() {
+            bail!("Invalid keybind for `{}`: {}", name, key);
+        }
+    }
+
+    Ok(())
+}
+
 impl Config {
+    fn validate(&self) -> eyre::Result<()> {
+        for key in &self.release_keys {
+            validate_keybind("release_keys", Some(key))?
+        }
+
+        validate_keybind("dismiss", self.keymap.dismiss.as_deref())?;
+        validate_keybind("select", self.keymap.select.as_deref())?;
+        validate_keybind("peek", self.keymap.peek.as_deref())?;
+        validate_keybind("next", self.keymap.next.as_deref())?;
+        validate_keybind("prev", self.keymap.prev.as_deref())?;
+        validate_keybind("peek_next", self.keymap.peek_next.as_deref())?;
+        validate_keybind("peek_prev", self.keymap.peek_prev.as_deref())?;
+
+        Ok(())
+    }
+
     pub fn read() -> eyre::Result<Self> {
         let config_path = config_file_path().wrap_err("Failed getting the config file path.")?;
 
@@ -53,7 +79,7 @@ impl Config {
                 .wrap_err("Failed creating the parent directory for the config file.")?,
         )?;
 
-        match fs::OpenOptions::new()
+        let config: Config = match fs::OpenOptions::new()
             .create_new(true)
             .write(true)
             .open(&config_path)
@@ -65,7 +91,7 @@ impl Config {
                     .wrap_err("Failed writing the default config to the config file.")?;
 
                 toml::from_str(DEFAULT_CONFIG)
-                    .wrap_err("Failed deserializing default config. This is a bug.")
+                    .wrap_err("Failed deserializing default config. This is a bug.")?
             }
 
             // The config file already exists. Read it.
@@ -80,11 +106,17 @@ impl Config {
                     .wrap_err("Failed reading the contents of the config file.")?;
 
                 toml::from_str(&file_contents)
-                    .wrap_err("Failed deserializing the config file. Is it valid TOML? Double-check your syntax.")
+                    .wrap_err("Failed deserializing the config file. Is it valid TOML? Double-check your syntax.")?
             }
             Err(err) => {
                 Err(err).wrap_err("Failed trying to check if the config file already exists.")?
             }
-        }
+        };
+
+        config
+            .validate()
+            .wrap_err("There was a problem with the config file.")?;
+
+        Ok(config)
     }
 }
