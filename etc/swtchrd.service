@@ -1,0 +1,14 @@
+[Unit]
+Description=Window switcher for Sway
+Documentation=https://github.com/lostatc/swtchr
+PartOf=sway-session.target
+After=sway-session.target
+
+[Service]
+Type=simple
+Environment=RUST_BACKTRACE=1
+ExecStart=%h/.cargo/bin/swtchrd
+Restart=on-failure
+
+[Install]
+WantedBy=sway-session.target

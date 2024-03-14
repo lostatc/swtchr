@@ -18,23 +18,29 @@ and `swtchrd` binaries to.
 
 ```
 # Start the swtchr daemon.
-exec ~/.local/bin/swtchrd
+exec ~/.cargo/bin/swtchrd
 
 # Set up keybinds to open the window switcher.
-bindsym $mod+Tab mode swtchr; exec ~/.local/bin/swtchr
-bindsym $mod+Shift+Tab mode swtchr; exec ~/.local/bin/swtchr
+bindsym $mod+Tab mode swtchr; exec ~/.cargo/bin/swtchr
+bindsym $mod+Shift+Tab mode swtchr; exec ~/.cargo/bin/swtchr
 
 # This is important! More information below.
 mode swtchr bindsym Backspace mode default
 ```
 
-See [Sway keybinds](#sway-keybinds) below to understand what's going on with
-the `mode swtchr` part.
+See [Configuring swtchr](#configuring-swtchr) to to customize the behavior and
+keybindings.
+
+See [Sway keybinds](#sway-keybinds) to understand what's going on with the
+`mode swtchr` part.
+
+See [Using systemd](#using-systemd) to start the swtchr daemon via a systemd
+service instead of via your Sway config.
 
 ## Configuring swtchr
 
 If you want to customize the behavior or keybindings of swtchr, you can copy
-the example [swtchr.toml](./swtchr.toml) config file to
+the example [swtchr.toml](./etc/swtchr.toml) config file to
 `~/.config/swtchr/swtchr.toml`. There are comments documenting each of the
 available options.
 
@@ -46,8 +52,8 @@ swtchr will look for that config file in these places:
 ## Sway keybinds
 
 You need to configure keybinds in your Sway config to open the window switcher.
-All other swtchr keybinds are configured in your
-[swtchr.toml](#configuring-swtchr).
+All other swtchr keybinds are configured in the [swtchr config
+file](#configuring-swtchr).
 
 Let's break down the Sway keybinds we set up in [Getting
 started](#getting-started):
@@ -69,9 +75,35 @@ mod swtchr bindsym Backspace mode default
 ```
 
 Sway only allows you to change the binding mode if you've configured a keybind
-to escape back to the `default` mode, so you'll need this line as well. You'll
+to escape back to the `default` mode, so you'll need this line as well. You may
 need to use this keybind if the swtchr daemon crashes before it's able to
 switch back to the `default` mode.
+
+## Using systemd
+
+Rather than start the swtchr daemon via an `exec` command in your Sway config,
+you may want to use a systemd service instead. This enables restart-on-failure
+behavior and makes checking the logs easier.
+
+There is an example systemd unit file provided in
+[etc/swtchrd.service](./etc/swtchrd.service). Update the `ExecStart=` line to
+match the path you installed the `swtchrd` binary to, and then drop it here:
+
+```
+~/.config/systemd/user/swtchrd.service`
+```
+
+From there, you can run this command to start the swtchr daemon and configure
+it autostart when you log into a Sway session:
+
+```shell
+systemctl --user enable --now swtchrd.service
+```
+
+If your distro doesn't package Sway with a `sway-session.target`, check out
+[these
+docs](https://wiki.archlinux.org/title/Sway#Manage_Sway-specific_daemons_with_systemd)
+on how to roll your own.
 
 ## Building from source
 
