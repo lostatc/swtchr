@@ -61,7 +61,7 @@ fn register_actions(app_window: &Window, on_display: DisplayCallback) {
     // Switch to the selected window and hide the overlay.
     let select = ActionEntry::builder("select")
         .activate(|window: &Window, _, _| {
-            window.activate_default();
+            sway::switch_window(window.window_id()).unwrap();
             WidgetExt::activate_action(window, "win.dismiss", None)
                 .expect("failed to activate action to dismiss window");
         })
@@ -70,7 +70,7 @@ fn register_actions(app_window: &Window, on_display: DisplayCallback) {
     // Switch to the selected window without hiding the overlay.
     let peek = ActionEntry::builder("peek")
         .activate(|window: &Window, _, _| {
-            window.activate_default();
+            sway::switch_window(window.window_id()).unwrap();
         })
         .build();
 
@@ -92,7 +92,7 @@ fn register_actions(app_window: &Window, on_display: DisplayCallback) {
     let peek_next = ActionEntry::builder("peek-next")
         .activate(|window: &Window, _, _| {
             window.child_focus(DirectionType::TabForward);
-            window.activate_default();
+            sway::switch_window(window.window_id()).unwrap();
         })
         .build();
 
@@ -100,7 +100,7 @@ fn register_actions(app_window: &Window, on_display: DisplayCallback) {
     let peek_prev = ActionEntry::builder("peek-prev")
         .activate(|window: &Window, _, _| {
             window.child_focus(DirectionType::TabBackward);
-            window.activate_default();
+            sway::switch_window(window.window_id()).unwrap();
         })
         .build();
 
@@ -184,11 +184,11 @@ fn register_keybinds(config: &Config, app: &Application) {
     }
 
     if let Some(key) = &config.keymap.peek_next {
-        app.set_accels_for_action("win.peek_next", &[key]);
+        app.set_accels_for_action("win.peek-next", &[key]);
     }
 
     if let Some(key) = &config.keymap.peek_prev {
-        app.set_accels_for_action("win.peek_prev", &[key]);
+        app.set_accels_for_action("win.peek-prev", &[key]);
     }
 }
 

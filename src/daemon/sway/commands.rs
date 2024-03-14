@@ -14,6 +14,12 @@ fn connection() -> &'static Mutex<Connection> {
 }
 
 pub fn switch_window(id: SwayWindowId) -> eyre::Result<()> {
+    if id.is_null() {
+        // The user attempted to select a window while the window switcher was empty. In this case,
+        // we should no-op to avoid an error from the Sway IPC API.
+        return Ok(());
+    }
+
     connection()
         .lock()
         .expect("lock is poisoned")

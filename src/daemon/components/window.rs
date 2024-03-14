@@ -25,6 +25,11 @@ impl Window {
     pub fn update_windows(&self, windows: &[sway::Window]) {
         let overlay = Overlay::new();
 
+        overlay
+            .bind_property("window-id", self, "window-id")
+            .sync_create()
+            .build();
+
         overlay.update_windows(windows);
 
         self.set_child(Some(&overlay));
@@ -32,11 +37,21 @@ impl Window {
 }
 
 mod imp {
+    use std::cell::Cell;
+
+    use glib::Properties;
     use gtk::glib;
+    use gtk::prelude::*;
     use gtk::subclass::prelude::*;
 
-    #[derive(Debug, Default)]
-    pub struct Window;
+    use crate::sway::SwayWindowId;
+
+    #[derive(Debug, Default, Properties)]
+    #[properties(wrapper_type = super::Window)]
+    pub struct Window {
+        #[property(get, set)]
+        window_id: Cell<SwayWindowId>,
+    }
 
     #[glib::object_subclass]
     impl ObjectSubclass for Window {
@@ -45,11 +60,8 @@ mod imp {
         type ParentType = gtk::ApplicationWindow;
     }
 
-    impl ObjectImpl for Window {
-        fn constructed(&self) {
-            self.parent_constructed();
-        }
-    }
+    #[glib::derived_properties]
+    impl ObjectImpl for Window {}
 
     impl WidgetImpl for Window {}
 

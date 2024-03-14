@@ -117,6 +117,12 @@ impl WindowSubscription {
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Hash, glib::ValueDelegate)]
 pub struct SwayWindowId(pub(super) i64);
 
+impl SwayWindowId {
+    pub fn is_null(&self) -> bool {
+        self.0 == 0
+    }
+}
+
 pub enum WindowEvent {
     // A window was focused, created, or marked urgent.
     Focus(Window),

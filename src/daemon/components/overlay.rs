@@ -36,7 +36,8 @@ impl Overlay {
             .sync_create()
             .build();
 
-        self.bind_property("window-id", &app_bar, "window-id")
+        app_bar
+            .bind_property("window-id", self, "window-id")
             .sync_create()
             .build();
 
