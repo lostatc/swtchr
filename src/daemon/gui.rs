@@ -109,10 +109,22 @@ fn register_key_release_controller(config: &Config, window: &Window) {
     let dismiss_on_release = config.dismiss_on_release;
     let select_on_release = config.select_on_release;
 
+    // When watching for key release events, we ignore modifiers. This is a workaround for some
+    // inconsistent behavior I've noticed between different versions of GTK4:
+    //
+    // - On v4.6, releasing the Super key emits a key release signal with `Super_L` as the key and
+    //   `<Super>` as the modifier.
+    // - On v4.12, releasing the Super key emits a key release signal with `Super_L` as the key and
+    //   no modifier.
+    //
+    // I've only tested these two versions, since they're what are available in my system package
+    // manager and nixpkgs respectively.
+
     let release_keys = config
         .release_keys
         .iter()
         .filter_map(gtk::accelerator_parse)
+        .map(|(key, _)| key)
         .collect::<HashSet<_>>();
 
     if !dismiss_on_release && !select_on_release {
@@ -121,23 +133,21 @@ fn register_key_release_controller(config: &Config, window: &Window) {
 
     let controller = EventControllerKey::new();
 
-    controller.connect_key_released(
-        clone!(@weak window => move |_, actual_key, _, actual_modifiers| {
-            if !release_keys.contains(&(actual_key, actual_modifiers)) {
-                return;
-            }
+    controller.connect_key_released(clone!(@weak window => move |_, actual_key, _, _| {
+        if !release_keys.contains(&actual_key) {
+            return;
+        }
 
-            if select_on_release {
-                WidgetExt::activate_action(&window, "win.select", None)
-                    .expect("Failed activating GTK action to switch window focus on key release.");
-            }
+        if select_on_release {
+            WidgetExt::activate_action(&window, "win.select", None)
+                .expect("Failed activating GTK action to switch window focus on key release.");
+        }
 
-            if dismiss_on_release {
-                WidgetExt::activate_action(&window, "win.dismiss", None)
-                    .expect("Failed activating GTK action to dismiss window switcher on key release.");
-            }
-        }),
-    );
+        if dismiss_on_release {
+            WidgetExt::activate_action(&window, "win.dismiss", None)
+                .expect("Failed activating GTK action to dismiss window switcher on key release.");
+        }
+    }));
 
     window.add_controller(controller);
 }

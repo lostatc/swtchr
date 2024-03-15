@@ -34,13 +34,13 @@ select_on_release = true
 # The keys that activate `dismiss_on_release` and `select_on_release` when
 # they're released.
 #
-# If you want to trigger these events on the release of a modifier key (like
-# Super), you need to format it like `<Super>Super_L`, where you're including
-# the key both as a modifier *and* as a regular key.
+# Modifiers like `<Ctrl>` and `<Alt>` are ignored when parsing these keybinds.
+# For example, if you want to trigger on the release of the left Super key, you
+# only need to specify `Super_L`, not `<Super>Super_L`.
 #
 # See the `keymap` section below for documentation on the format of keymap
 # strings.
-release_keys = ["<Super>Super_L", "<Super><Shift>Super_L"]
+release_keys = ["Super_L"]
 
 # The keymap for the window switcher.
 #
