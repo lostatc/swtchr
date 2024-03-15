@@ -191,12 +191,12 @@ fn register_keybinds(config: &Config, app: &Application) {
 pub fn load_css() -> eyre::Result<()> {
     // Load the base CSS.
     let app_provider = CssProvider::new();
-    app_provider.load_from_string(include_str!("../style.css"));
+    app_provider.load_from_data(include_str!("../style.css"));
 
     // Load the user's CSS overrides, if provided.
     let user_provider = CssProvider::new();
     if let Some(user_css) = user_css_override().wrap_err("Failed to read the user's custom CSS.")? {
-        user_provider.load_from_string(&user_css);
+        user_provider.load_from_data(&user_css);
     }
 
     let display = Display::default().ok_or(eyre!("Could not connect to a display."))?;

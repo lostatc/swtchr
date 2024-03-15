@@ -137,35 +137,15 @@ on how to roll your own.
 
 ## Building from source
 
-This crate requires native dependencies to build.
+To build and install the `swtchr` and `swtchrd` binaries:
 
-The easiest way to install these dependencies locally is to clone the repo and
-use the provided nix shell. [Install nix](https://nixos.org/download) and then
-run:
+1. Clone this repo
+2. Install the necessary build dependencies (see below)
+3. [Install Rust](https://www.rust-lang.org/tools/install)
+4. `$ cargo install --path .`
 
-```shell
-git clone https://github.com/lostatc/swtchr
-cd ./swtchr
-nix-shell
-```
-
-You can also use [direnv](https://direnv.net) to load the nix shell
-automatically:
-
-```shell
-cd ./swtchr
-direnv allow
-```
-
-If you would rather install the necessary dependencies yourself:
+Build dependencies:
 
 - [gtk4](https://gtk-rs.org/gtk4-rs/stable/latest/book/installation_linux.html)
 - [gtk4-layer-shell](https://github.com/wmww/gtk4-layer-shell?tab=readme-ov-file#distro-packages)
 - [librsvg](https://gitlab.gnome.org/GNOME/librsvg)
-
-To install the `swtchrd` daemon and `swtchr` client binaries, [install
-Rust](https://www.rust-lang.org/tools/install) and run:
-
-```shell
-cargo install --path .
-```
