@@ -5,7 +5,6 @@ use std::os::unix::net::UnixDatagram;
 use clap::Parser;
 use eyre::Context;
 use swtchr::ipc::{sock_path, Command};
-use swtchr::session::check_is_sway_session;
 use swtchr::sway;
 
 use cli::Cli;
@@ -13,7 +12,7 @@ use cli::Cli;
 fn send_msg() -> eyre::Result<()> {
     let socket = UnixDatagram::unbound()?;
     socket
-        .connect(sock_path()?)
+        .connect(sock_path())
         .wrap_err("Could not connect to swtchrd socket. Is the daemon running?")?;
 
     socket
@@ -29,7 +28,7 @@ fn main() -> eyre::Result<()> {
     let args = Cli::parse();
 
     if !args.no_check {
-        check_is_sway_session()?;
+        sway::check_is_sway_session()?;
     }
 
     if let Err(err) = send_msg() {

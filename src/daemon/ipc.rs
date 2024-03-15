@@ -10,7 +10,7 @@ use swtchr::ipc::{sock_path, Command};
 pub fn subscribe() -> eyre::Result<async_channel::Receiver<eyre::Result<Command>>> {
     let (sender, receiver) = async_channel::unbounded::<eyre::Result<Command>>();
 
-    let socket_path = sock_path().wrap_err("Error getting the swtchrd IPC socket path.")?;
+    let socket_path = sock_path();
 
     match fs::remove_file(&socket_path) {
         Ok(()) => {}

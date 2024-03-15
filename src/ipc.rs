@@ -5,13 +5,13 @@ use eyre::bail;
 
 const SOCK_NAME: &str = "swtchrd.sock";
 
-pub fn sock_path() -> eyre::Result<PathBuf> {
-    match env::var("XDG_RUNTIME_DIR")?.trim() {
+pub fn sock_path() -> PathBuf {
+    match env::var("XDG_RUNTIME_DIR").unwrap_or_default().trim() {
         "" => {
             let uid = nix::unistd::getuid();
-            Ok(PathBuf::from(format!("/run/user/{uid}/{SOCK_NAME}")))
+            PathBuf::from(format!("/run/user/{uid}/{SOCK_NAME}"))
         }
-        path => Ok([path, SOCK_NAME].iter().collect()),
+        path => [path, SOCK_NAME].iter().collect(),
     }
 }
 

@@ -16,8 +16,7 @@ use gtk::Application;
 use cli::Cli;
 use config::{config_file_path, Config};
 use gui::{build_window, load_css};
-use swtchr::session::check_is_sway_session;
-use swtchr::sway::WindowSubscription;
+use swtchr::sway::{check_is_sway_session, WindowSubscription};
 
 pub const APP_ID: &str = "io.github.lostatc.swtchr";
 pub const WINDOW_TITLE: &str = "swtchr";
