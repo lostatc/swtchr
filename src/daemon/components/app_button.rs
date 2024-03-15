@@ -12,7 +12,10 @@ glib::wrapper! {
 
 impl AppButton {
     pub fn new(window: &Window) -> Self {
-        let image = window.icon_locator.icon();
+        let image = window
+            .icon_locator
+            .icon()
+            .expect("Failed finding an icon for the window.");
 
         image.set_pixel_size(80);
 

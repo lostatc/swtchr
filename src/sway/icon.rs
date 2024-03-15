@@ -1,4 +1,6 @@
-use gtk::gio::DesktopAppInfo;
+use eyre::eyre;
+use gtk::gdk;
+use gtk::gio::{self, DesktopAppInfo};
 use gtk::prelude::*;
 use swayipc::Node;
 
@@ -19,26 +21,32 @@ pub struct IconLocator {
 }
 
 impl IconLocator {
-    // Return the single piece of information about the window that will give us the best shot at
-    // finding its icon.
-    fn best_option(&self) -> Option<&str> {
-        self.app_id
-            .as_deref()
-            .or(self.x_window_class.as_deref())
-            .or(self.x_window_instance.as_deref())
-            .or(self.window_title.as_deref())
+    // Return the list of string we should use to try and locate the app icon, sorted by how likely
+    // they are to work.
+    fn locators(&self) -> Vec<&str> {
+        [
+            self.app_id.as_deref(),
+            self.x_window_instance.as_deref(),
+            self.x_window_class.as_deref(),
+            self.window_title.as_deref(),
+        ]
+        .into_iter()
+        .flatten()
+        .collect()
     }
 
-    fn app_info(&self) -> Option<DesktopAppInfo> {
-        let options = match self.best_option() {
-            Some(best_option) => DesktopAppInfo::search(best_option),
-            None => return None,
-        };
+    fn desktop_icon(&self) -> Option<gio::Icon> {
+        for locator in self.locators() {
+            let options = DesktopAppInfo::search(locator);
 
-        for option_list in options {
-            for desktop_file_id in option_list {
-                if let Some(app_info) = DesktopAppInfo::new(&desktop_file_id) {
-                    return Some(app_info);
+            for option_list in options {
+                for desktop_file_id in option_list {
+                    let maybe_icon =
+                        DesktopAppInfo::new(&desktop_file_id).and_then(|app_info| app_info.icon());
+
+                    if let Some(icon) = maybe_icon {
+                        return Some(icon);
+                    }
                 }
             }
         }
@@ -46,19 +54,25 @@ impl IconLocator {
         None
     }
 
-    pub fn icon(&self) -> gtk::Image {
-        match self.app_info().and_then(|app_info| app_info.icon()) {
-            // Try to locate the app icon via its desktop entry.
-            Some(gicon) => gtk::Image::from_gicon(&gicon),
-            // Look for an icon in the current GTK theme for the window's Wayland app ID.
-            None => gtk::Image::from_icon_name(
-                self.app_id
-                    .as_ref()
-                    // We weren't able to find an icon for the window, so fall back to the Gnome
-                    // missing image icon.
-                    .unwrap_or(&String::from(GTK_MISSING_IMAGE_ICON)),
-            ),
+    pub fn icon(&self) -> eyre::Result<gtk::Image> {
+        let display = gdk::Display::default().ok_or(eyre!("Could not connect to a display."))?;
+        let theme = gtk::IconTheme::for_display(&display);
+
+        // Look for an icon in the current GTK icon theme. We should prefer use the icon in the
+        // user's theme if it exists.
+        for locator in self.locators() {
+            if theme.has_icon(locator) {
+                return Ok(gtk::Image::from_icon_name(locator));
+            }
         }
+
+        // Try to locate the app icon via its desktop entry.
+        Ok(self
+            .desktop_icon()
+            .map(|icon| gtk::Image::from_gicon(&icon))
+            // We weren't able to find an icon for the window, so fall back to the Gnome missing
+            // image icon.
+            .unwrap_or_else(|| gtk::Image::from_icon_name(&String::from(GTK_MISSING_IMAGE_ICON))))
     }
 }
 
