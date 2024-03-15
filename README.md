@@ -144,6 +144,8 @@ To build and install the `swtchr` and `swtchrd` binaries:
 3. [Install Rust](https://www.rust-lang.org/tools/install)
 4. `$ cargo install --path .`
 
+This will install the binaries to `~/.cargo/bin/`.
+
 Build dependencies:
 
 - [gtk4](https://gtk-rs.org/gtk4-rs/stable/latest/book/installation_linux.html)
