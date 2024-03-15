@@ -120,7 +120,7 @@ There is an example systemd unit file provided in
 match the path you installed the `swtchrd` binary to, and then drop it here:
 
 ```
-~/.config/systemd/user/swtchrd.service`
+~/.config/systemd/user/swtchrd.service
 ```
 
 From there, you can run this command to start the swtchr daemon and configure
