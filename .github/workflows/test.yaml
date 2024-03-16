@@ -24,7 +24,7 @@ jobs:
           components: rustfmt, clippy
 
       - name: "Install system dependencies"
-        run: "sudo apt install git build-essential libgtk-4-dev librsvg2-2 meson ninja-build libwayland-dev"
+        run: "sudo apt install build-essential libgtk-4-dev meson ninja-build libwayland-dev"
 
       - name: "Checkout gtk4-layer-shell"
         uses: actions/checkout@v4
