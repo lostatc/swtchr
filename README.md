@@ -28,9 +28,9 @@ This will install the `swtchr` and `swtchrd` binaries to `~/.cargo/bin/`.
 
 ## Getting started
 
-Next, drop these commands into your Sway config, which is usually located at
-`~/.config/sway/config`. Substitute whatever path you installed the `swtchr`
-and `swtchrd` binaries to.
+To get started, drop these commands into your Sway config, which is usually
+located at `~/.config/sway/config`. Substitute whatever path you installed the
+`swtchr` and `swtchrd` binaries to.
 
 ```
 # Start the swtchr daemon.
