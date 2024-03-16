@@ -19,7 +19,7 @@ jobs:
         uses: actions-rs/toolchain@v1
         with:
           profile: minimal
-          toolchain: "1.70.0"
+          toolchain: "1.74.0"
           override: true
 
       - name: "Run cargo check"
@@ -41,7 +41,7 @@ jobs:
         uses: actions-rs/toolchain@v1
         with:
           profile: minimal
-          toolchain: "1.70.0"
+          toolchain: "1.74.0"
           override: true
 
       - name: "Run cargo test"
