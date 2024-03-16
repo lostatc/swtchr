@@ -13,14 +13,40 @@ jobs:
       RUSTFLAGS: "-D warnings"
     steps:
       - name: "Checkout sources"
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
 
       - name: "Install stable toolchain"
         uses: actions-rs/toolchain@v1
         with:
           profile: minimal
-          toolchain: "1.74.0"
+          toolchain: stable
           override: true
+          components: rustfmt, clippy
+
+      - name: "Install system dependencies"
+        run: "sudo apt install git build-essential libgtk-4-dev librsvg2-2 meson ninja-build libwayland-dev"
+
+      - name: "Checkout gtk4-layer-shell"
+        uses: actions/checkout@v4
+        with:
+          repository: "wmww/gtk4-layer-shell"
+          path: "gtk4-layer-shell"
+
+      - name: "meson setup build"
+        working-directory: "gtk4-layer-shell"
+        run: "meson setup -Dsmoke-tests=false -Dintrospection=false -Dvapi=false build"
+
+      - name: "ninja build"
+        working-directory: "gtk4-layer-shell"
+        run: "ninja -C build"
+
+      - name: "sudo ninja build install"
+        working-directory: "gtk4-layer-shell"
+        run: "sudo ninja -C build install"
+
+      - name: "sudo ldconfig"
+        working-directory: "gtk4-layer-shell"
+        run: "sudo ldconfig"
 
       - name: "Run cargo check"
         uses: actions-rs/cargo@v1
@@ -33,23 +59,6 @@ jobs:
         with:
           command: test
           args: --all-features
-
-  lint:
-    name: "Lint"
-    runs-on: ubuntu-latest
-    env:
-      RUSTFLAGS: "-D warnings"
-    steps:
-      - name: "Checkout sources"
-        uses: actions/checkout@v2
-
-      - name: "Install stable toolchain"
-        uses: actions-rs/toolchain@v1
-        with:
-          profile: minimal
-          toolchain: stable
-          override: true
-          components: rustfmt, clippy
 
       - name: "Run cargo fmt"
         uses: actions-rs/cargo@v1
