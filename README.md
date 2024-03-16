@@ -23,7 +23,7 @@ and `swtchrd` binaries to.
 
 ```
 # Start the swtchr daemon.
-exec ~/.cargo/bin/swtchrd
+exec_always ~/.cargo/bin/swtchrd
 
 # Set up keybinds to open the window switcher.
 bindsym $mod+Tab mode swtchr; exec ~/.cargo/bin/swtchr
