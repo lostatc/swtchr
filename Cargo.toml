@@ -2,6 +2,12 @@
 name = "swtchr"
 version = "0.1.0"
 edition = "2021"
+authors = ["Wren Powell <wrenp@duck.com>"]
+description = "A Gnome-style window switcher for the Sway window manager"
+homepage = "https://github.com/lostatc/swtchr"
+repository = "https://github.com/lostatc/swtchr"
+readme = "README.md"
+license = "MIT"
 
 [dependencies]
 async-channel = "2.2.0"
