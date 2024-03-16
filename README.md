@@ -13,12 +13,17 @@ recently accessed.
 
 ## Installing
 
-First you'll need to install these system dependencies:
+You can find prebuilt binaries on the [releases
+page](https://github.com/lostatc/swtchr/releases), or you can build from
+source.
+
+To build from source, you'll need to install these system dependencies:
 
 - [libgtk-4-dev](https://gtk-rs.org/gtk4-rs/stable/latest/book/installation_linux.html)
 - [gtk4-layer-shell](https://github.com/wmww/gtk4-layer-shell?tab=readme-ov-file#distro-packages)
 
-Then [install Rust](https://www.rust-lang.org/tools/install) and run:
+Then [install Rust](https://www.rust-lang.org/tools/install) and run this
+command (you do not need to clone the repo):
 
 ```
 cargo install swtchr
