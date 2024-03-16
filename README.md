@@ -1,3 +1,5 @@
+[![Tests Workflow Status (main)](https://img.shields.io/github/actions/workflow/status/lostatc/swtchr/test.yaml?branch=main&label=Tests&style=for-the-badge&logo=github)](https://github.com/lostatc/swtchr/actions/workflows/test.yaml)
+
 # swtchr
 
 ![A screenshot of the swtchr window switcher over a Sway desktop](./etc/screenshot.png)
