@@ -55,6 +55,9 @@ See [Sway keybinds](#sway-keybinds) to understand what's going on with the
 See [Using systemd](#using-systemd) to start the swtchr daemon via a systemd
 service instead of via your Sway config.
 
+See [Recipes](#recipes) for some examples of different ways you can configure
+swtchr.
+
 ## Configuring swtchr
 
 You can configure the behavior and keybindings for swtchr in
@@ -148,3 +151,35 @@ If your distro doesn't package Sway with a `sway-session.target`, check out
 [these
 docs](https://wiki.archlinux.org/title/Sway#Manage_Sway-specific_daemons_with_systemd)
 on how to roll your own.
+
+## Recipes
+
+Out of the box, swtchr only switches focus to the selected window when you
+release `<Super>Tab` / `<Super><Shift>Tab`. You can optionally enable "peeking"
+to switch window focus immediately as you cycle through windows in the
+switcher.
+
+```toml
+[keymap]
+
+#next = "<Super>Tab"
+peek_next = "<Super>Tab"
+
+#prev = "<Super><Shift>Tab"
+peek_prev = "<Super><Shift>Tab"
+```
+
+Instead of switching window focus and closing the window switcher immediately
+when you release `<Super>Tab` / `<Super><Shift>Tab`, you can configure swtchr
+with separate keybinds to a) switch to the selected window or b) dismiss the
+window switcher.
+
+```toml
+dismiss_on_release = false
+select_on_release = false
+
+[keymap]
+
+dismiss = "Escape"
+select = "Return"
+```
