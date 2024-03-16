@@ -6,8 +6,8 @@ on:
   - workflow_dispatch
 
 jobs:
-  check:
-    name: "Check"
+  test:
+    name: "Test"
     runs-on: ubuntu-latest
     env:
       RUSTFLAGS: "-D warnings"
@@ -27,22 +27,6 @@ jobs:
         with:
           command: check
           args: --all-features
-
-  test:
-    name: "Test"
-    runs-on: ubuntu-latest
-    env:
-      RUSTFLAGS: "-D warnings"
-    steps:
-      - name: "Checkout sources"
-        uses: actions/checkout@v2
-
-      - name: "Install stable toolchain"
-        uses: actions-rs/toolchain@v1
-        with:
-          profile: minimal
-          toolchain: "1.74.0"
-          override: true
 
       - name: "Run cargo test"
         uses: actions-rs/cargo@v1
