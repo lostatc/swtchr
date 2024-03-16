@@ -11,11 +11,22 @@ Out of the box, you can use `<Super>Tab` and `<Super><Shift>Tab` to page
 forward and backward through a list of windows ordered from most to least
 recently accessed.
 
-## Getting started
+## Installing
 
-First, install swtchr. You can find prebuilt binaries in the GitHub [releases
-page](https://github.com/lostatc/swtchr/releases), or you can [build from
-source](#building-from-source).
+First you'll need to install these system dependencies:
+
+- [libgtk-4-dev](https://gtk-rs.org/gtk4-rs/stable/latest/book/installation_linux.html)
+- [gtk4-layer-shell](https://github.com/wmww/gtk4-layer-shell?tab=readme-ov-file#distro-packages)
+
+Then [install Rust](https://www.rust-lang.org/tools/install) and run:
+
+```
+cargo install swtchr
+```
+
+This will install the `swtchr` and `swtchrd` binaries to `~/.cargo/bin/`.
+
+## Getting started
 
 Next, drop these commands into your Sway config, which is usually located at
 `~/.config/sway/config`. Substitute whatever path you installed the `swtchr`
@@ -51,7 +62,7 @@ You can configure the behavior and keybindings for swtchr in
 will be generated there the first time you start the swtchr daemon.
 
 The comments in the example config file document what each option does. You can
-also take at look at the file in [src/swtchr.toml](./src/swtchr.toml).
+find it at [src/swtchr.toml](./src/swtchr.toml).
 
 swtchr will look for the `swtchr.toml` file in these places:
 
@@ -67,8 +78,8 @@ CSS](https://docs.gtk.org/gtk4/css-properties.html). Just drop a CSS file here:
 ~/.config/swtchr/style.css
 ```
 
-You can look at the default stylesheet at [src/style.css](./src/style.css) as
-an example.
+You can look at the default stylesheet [src/style.css](./src/style.css) as an
+example.
 
 Additionally, you can open the interactive GTK debugger to inspect objects, see
 their CSS classes, and apply CSS styles live:
@@ -114,9 +125,9 @@ switch back to the `default` mode.
 
 ## Using systemd
 
-Rather than start the swtchr daemon via an `exec` command in your Sway config,
-you may want to use a systemd service instead. This enables restart-on-failure
-behavior and makes checking the logs easier.
+Rather than start the swtchr daemon via an `exec_always` command in your Sway
+config, you may want to use a systemd service instead. This enables
+restart-on-failure behavior and makes checking the logs easier.
 
 There is an example systemd unit file provided in
 [etc/swtchrd.service](./etc/swtchrd.service). Update the `ExecStart=` line to
@@ -137,20 +148,3 @@ If your distro doesn't package Sway with a `sway-session.target`, check out
 [these
 docs](https://wiki.archlinux.org/title/Sway#Manage_Sway-specific_daemons_with_systemd)
 on how to roll your own.
-
-## Building from source
-
-To build and install the `swtchr` and `swtchrd` binaries:
-
-1. Clone this repo
-2. Install the necessary build dependencies (see below)
-3. [Install Rust](https://www.rust-lang.org/tools/install)
-4. `$ cargo install --path .`
-
-This will install the binaries to `~/.cargo/bin/`.
-
-Build dependencies:
-
-- [gtk4](https://gtk-rs.org/gtk4-rs/stable/latest/book/installation_linux.html)
-- [gtk4-layer-shell](https://github.com/wmww/gtk4-layer-shell?tab=readme-ov-file#distro-packages)
-- [librsvg](https://gitlab.gnome.org/GNOME/librsvg)
