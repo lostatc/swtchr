@@ -13,8 +13,9 @@ recently accessed.
 
 ## Getting started
 
-First, install swtchr. You can find prebuilt binaries in the GitHub releases
-page, or you can [build from source](#building-from-source).
+First, install swtchr. You can find prebuilt binaries in the GitHub [releases
+page](https://github.com/lostatc/swtchr/releases), or you can [build from
+source](#building-from-source).
 
 Next, drop these commands into your Sway config, which is usually located at
 `~/.config/sway/config`. Substitute whatever path you installed the `swtchr`
