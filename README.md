@@ -160,6 +160,8 @@ to switch window focus immediately as you cycle through windows in the
 switcher.
 
 ```toml
+# swtchr.toml
+
 [keymap]
 
 #next = "<Super>Tab"
@@ -175,6 +177,8 @@ with separate keybinds to a) switch to the selected window or b) dismiss the
 window switcher.
 
 ```toml
+# swtchr.toml
+
 dismiss_on_release = false
 select_on_release = false
 
