@@ -69,23 +69,24 @@ impl WindowSubscription {
             for event_result in subscription {
                 if let Some(result) = filter_event(event_result, urgent_first).transpose() {
                     match result {
-                        Ok(event) => {
-                            match sending_queue.write() {
-                                Ok(mut queue) => queue.push_event(event),
-                                // Lock is poisoned.
-                                Err(_) => break,
+                        Ok(event) => match sending_queue.write() {
+                            Ok(mut queue) => queue.push_event(event),
+                            Err(_) => {
+                                eprintln!("Lock on window priority queue is poisoned.");
+                                break;
                             }
-                        }
+                        },
                         Err(err) => {
                             let is_closed = err_sender.send(err).is_err();
 
                             if is_closed {
+                                eprintln!(
+                                    "Cannot send Sway IPC error: Channel closed unexpectedly."
+                                );
                                 break;
                             }
                         }
                     }
-                } else {
-                    continue;
                 }
             }
         });
@@ -102,7 +103,7 @@ impl WindowSubscription {
             Ok(err) => return Err(err),
             // Only fail when the channel is disconnected, not when the channel is empty.
             Err(mpsc::TryRecvError::Disconnected) => {
-                bail!("Window priority queue errors channel closed unexpectedly.");
+                bail!("Cannot receive Sway IPC error: Channel closed unexpectedly.");
             }
             _ => {}
         }
