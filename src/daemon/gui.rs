@@ -157,12 +157,20 @@ fn register_ipc_command_handlers(window: &Window) -> eyre::Result<()> {
 
     glib::spawn_future_local(clone!(@weak window => async move {
         while let Ok(msg) = receiver.recv().await {
-            use SwtchrCommand::*;
+            let action_result = match msg {
+                Ok(SwtchrCommand::Show) => WidgetExt::activate_action(&window, "win.show", None).map_err(eyre::Report::from),
+                Err(err) => {
+                    eprintln!("Error receiving IPC command from the swtchr client: {}", err);
+                    continue;
+                },
+            };
 
-            match msg.expect("Error receiving IPC command from the swtchr client.") {
-                Show => WidgetExt::activate_action(&window, "win.show", None).map_err(eyre::Report::from),
-            }.expect("Error dispatching IPC command from the swtchr client.")
+            if let Err(err) = action_result {
+                eprintln!("Error dispatching IPC command from the swtchr client: {}", err);
+            }
         }
+
+        eprintln!("Cannot receive next command: Channel unexpectedly closed.");
     }));
 
     Ok(())
