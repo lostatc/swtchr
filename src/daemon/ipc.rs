@@ -30,8 +30,10 @@ pub fn subscribe() -> eyre::Result<async_channel::Receiver<eyre::Result<Command>
                 Err(err) => sender.send_blocking(Err(err.into())),
             };
 
-            if send_result.is_err() {
-                break;
+            if let Err(err) = send_result {
+                eprintln!("Error receiving command over IPC socket: {}", err);
+
+                continue;
             }
         }
     });
