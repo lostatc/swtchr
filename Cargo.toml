@@ -1,6 +1,6 @@
 [package]
 name = "swtchr"
-version = "0.1.1"
+version = "0.1.2"
 edition = "2021"
 authors = ["Wren Powell <wrenp@duck.com>"]
 description = "A Gnome-style window switcher for the Sway window manager"
