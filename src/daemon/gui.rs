@@ -33,11 +33,9 @@ fn register_actions(app_window: &Window, on_display: DisplayCallback) {
         .activate(move |window: &Window, _, _| {
             // Check if the window is already visible first so we don't needlessly repopulate the
             // window list every time the user mashes the key.
-            if !window.get_visible() {
-                on_display();
-                window.set_keyboard_mode(KeyboardMode::Exclusive);
-                window.set_visible(true);
-            }
+            on_display();
+            window.set_keyboard_mode(KeyboardMode::Exclusive);
+            window.set_visible(true);
         })
         .build();
 
