@@ -31,8 +31,6 @@ fn register_actions(app_window: &Window, on_display: DisplayCallback) {
     // Make the overlay visible and capture keyboard events.
     let show = ActionEntry::builder("show")
         .activate(move |window: &Window, _, _| {
-            // Check if the window is already visible first so we don't needlessly repopulate the
-            // window list every time the user mashes the key.
             on_display();
             window.set_keyboard_mode(KeyboardMode::Exclusive);
             window.set_visible(true);
