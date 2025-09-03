@@ -25,10 +25,14 @@ impl AppBar {
         }
 
         for app_button in app_buttons.iter() {
-            app_button.connect_has_focus_notify(clone!(@weak obj => move |button| {
-                obj.set_current_title(button.window_title());
-                obj.set_window_id(button.window_id());
-            }));
+            app_button.connect_has_focus_notify(clone!(
+                #[weak]
+                obj,
+                move |button| {
+                    obj.set_current_title(button.window_title());
+                    obj.set_window_id(button.window_id());
+                }
+            ));
         }
 
         obj

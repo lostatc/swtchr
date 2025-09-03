@@ -129,21 +129,26 @@ fn register_key_release_controller(config: &Config, window: &Window) {
 
     let controller = EventControllerKey::new();
 
-    controller.connect_key_released(clone!(@weak window => move |_, actual_key, _, _| {
-        if !release_keys.contains(&actual_key) {
-            return;
-        }
+    controller.connect_key_released(clone!(
+        #[weak]
+        window,
+        move |_, actual_key, _, _| {
+            if !release_keys.contains(&actual_key) {
+                return;
+            }
 
-        if select_on_release {
-            WidgetExt::activate_action(&window, "win.select", None)
-                .expect("Failed activating GTK action to switch window focus on key release.");
-        }
+            if select_on_release {
+                WidgetExt::activate_action(&window, "win.select", None)
+                    .expect("Failed activating GTK action to switch window focus on key release.");
+            }
 
-        if dismiss_on_release {
-            WidgetExt::activate_action(&window, "win.dismiss", None)
-                .expect("Failed activating GTK action to dismiss window switcher on key release.");
+            if dismiss_on_release {
+                WidgetExt::activate_action(&window, "win.dismiss", None).expect(
+                    "Failed activating GTK action to dismiss window switcher on key release.",
+                );
+            }
         }
-    }));
+    ));
 
     window.add_controller(controller);
 }
@@ -151,23 +156,36 @@ fn register_key_release_controller(config: &Config, window: &Window) {
 fn register_ipc_command_handlers(window: &Window) -> eyre::Result<()> {
     let receiver = ipc::subscribe()?;
 
-    glib::spawn_future_local(clone!(@weak window => async move {
-        while let Ok(msg) = receiver.recv().await {
-            let action_result = match msg {
-                Ok(SwtchrCommand::Show) => WidgetExt::activate_action(&window, "win.show", None).map_err(eyre::Report::from),
-                Err(err) => {
-                    eprintln!("Error receiving IPC command from the swtchr client: {}", err);
-                    continue;
-                },
-            };
+    glib::spawn_future_local(clone!(
+        #[weak]
+        window,
+        async move {
+            while let Ok(msg) = receiver.recv().await {
+                let action_result = match msg {
+                    Ok(SwtchrCommand::Show) => {
+                        WidgetExt::activate_action(&window, "win.show", None)
+                            .map_err(eyre::Report::from)
+                    }
+                    Err(err) => {
+                        eprintln!(
+                            "Error receiving IPC command from the swtchr client: {}",
+                            err
+                        );
+                        continue;
+                    }
+                };
 
-            if let Err(err) = action_result {
-                eprintln!("Error dispatching IPC command from the swtchr client: {}", err);
+                if let Err(err) = action_result {
+                    eprintln!(
+                        "Error dispatching IPC command from the swtchr client: {}",
+                        err
+                    );
+                }
             }
-        }
 
-        eprintln!("Cannot receive next command: Channel unexpectedly closed.");
-    }));
+            eprintln!("Cannot receive next command: Channel unexpectedly closed.");
+        }
+    ));
 
     Ok(())
 }
@@ -241,9 +259,17 @@ pub fn build_window(config: &Config, app: &Application, subscription: Rc<WindowS
     window.set_keyboard_mode(KeyboardMode::None);
 
     // Update the list of windows in the window switcher right before we display it.
-    let on_display = Box::new(clone!(@weak window => move || {
-        window.update_windows(&subscription.get_window_list().expect("Failed getting window list to populate window switcher overlay."));
-    }));
+    let on_display = Box::new(clone!(
+        #[weak]
+        window,
+        move || {
+            window.update_windows(
+                &subscription
+                    .get_window_list()
+                    .expect("Failed getting window list to populate window switcher overlay."),
+            );
+        }
+    ));
 
     register_actions(&window, on_display);
     register_keybinds(config, app);
