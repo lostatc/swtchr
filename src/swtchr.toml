@@ -42,6 +42,9 @@ select_on_release = true
 # strings.
 release_keys = ["Super_L"]
 
+#for including scratch pad windows 
+scratch_pad= false
+
 # The keymap for the window switcher.
 #
 # The default keymap mimics the Gnome-style `<Super>Tab` behavior.

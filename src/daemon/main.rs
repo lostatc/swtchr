@@ -41,7 +41,7 @@ fn main() -> eyre::Result<()> {
     }
 
     let subscription = Rc::new(
-        WindowSubscription::subscribe(config.urgent_first)
+        WindowSubscription::subscribe(config.urgent_first,config.scratch_pad)
             .wrap_err("Failed subscribing to Sway window focus events.")?,
     );
 

@@ -64,6 +64,7 @@ pub struct Config {
     pub select_on_release: bool,
     pub release_keys: Vec<String>,
     pub keymap: KeymapConfig,
+    pub scratch_pad:bool,
 }
 
 fn validate_keybind(name: &str, key: Option<&str>) -> eyre::Result<()> {

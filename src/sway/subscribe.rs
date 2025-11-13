@@ -4,7 +4,7 @@ use std::thread;
 
 use eyre::{bail, eyre, WrapErr};
 use gtk::glib;
-use swayipc::{self, Connection, Event, EventType, WindowChange};
+use swayipc::{self, Connection, Event, EventType, WindowChange,ScratchpadState};
 
 use super::queue::WindowQueue;
 use super::IconLocator;
@@ -12,6 +12,7 @@ use super::IconLocator;
 fn filter_event(
     event_result: swayipc::Fallible<Event>,
     urgent_first: bool,
+    scratch_pad_config: bool,
 ) -> eyre::Result<Option<WindowEvent>> {
     let event = event_result.wrap_err("Failed reading Sway event result.")?;
 
@@ -19,6 +20,19 @@ fn filter_event(
         Event::Window(window_event) => window_event,
         _ => return Ok(None),
     };
+
+    //checking if the window is scratchpad
+    let scratch_pad= match window_event.container.scratchpad_state.unwrap() {
+                                    //not using scratch pad
+                                    ScratchpadState::None => false,
+                                    //everything else
+                                    _=> true
+                                };
+    // skipping the wndow if it is scratchpad
+    if scratch_pad && !scratch_pad_config {
+        return Ok(None);
+    }
+
 
     match window_event.change {
         WindowChange::New | WindowChange::Focus | WindowChange::Urgent => {
@@ -50,7 +64,7 @@ pub struct WindowSubscription {
 }
 
 impl WindowSubscription {
-    pub fn subscribe(urgent_first: bool) -> eyre::Result<WindowSubscription> {
+    pub fn subscribe(urgent_first: bool,scratch_pad_config: bool) -> eyre::Result<WindowSubscription> {
         // We use a rendezvous channel because we don't want the errors piling up in an infinite
         // channel buffer until the next time the user opens the window switcher. The subscription
         // listener thread will block on the first error it encounters, and then that error will be
@@ -67,7 +81,7 @@ impl WindowSubscription {
 
         thread::spawn(move || {
             for event_result in subscription {
-                if let Some(result) = filter_event(event_result, urgent_first).transpose() {
+                if let Some(result) = filter_event(event_result, urgent_first,scratch_pad_config).transpose() {
                     match result {
                         Ok(event) => match sending_queue.write() {
                             Ok(mut queue) => queue.push_event(event),
